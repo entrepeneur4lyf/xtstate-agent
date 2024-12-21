@@ -81,6 +81,7 @@ test('agent.addFeedback() adds to feedback', () => {
 
   const decision: AgentDecision<typeof agent> = {
     goal: 'Win the game',
+    decisionId: null,
     episodeId: agent.episodeId,
     goalState: { value: 'won' },
     id: 'decision-1',
@@ -498,6 +499,7 @@ test('agent.getDecisions() returns decisions from context', () => {
     strategy: async (agent) => {
       return {
         id: Date.now().toString(),
+        decisionId: null,
         episodeId: agent.episodeId,
         strategy: 'test-strategy',
         goal: '',
@@ -684,7 +686,7 @@ test('You can listen for observation events', () => {
 
   agent.onObservation(fn);
 
-  const observation = agent.addObservation({
+  agent.addObservation({
     state: { value: 'playing' },
     goal: 'Win the game',
   });
@@ -712,6 +714,7 @@ test('You can listen for decision events', () => {
 
   const decision = {
     id: 'decision-1',
+    decisionId: null,
     episodeId: agent.episodeId,
     strategy: 'test-strategy',
     goal: 'Win the game',
@@ -775,6 +778,7 @@ test('Event listeners can be unsubscribed (onDecision)', () => {
 
   const decision = {
     id: 'decision-1',
+    decisionId: null,
     episodeId: agent.episodeId,
     strategy: 'test-strategy',
     goal: 'Win the game',

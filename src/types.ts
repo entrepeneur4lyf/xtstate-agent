@@ -35,6 +35,10 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
 > & {
   episodeId?: string;
   /**
+   * The parent decision that this decision is a part of.
+   */
+  decisionId?: string;
+  /**
    * The currently observed state.
    */
   state: ObservedState<TAgent>;
@@ -79,6 +83,9 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    * The previous relevant observations from the agent.
    */
   observations?: AgentObservation<any>[];
+  /**
+   * The previous relevant decisions from the agent.
+   */
   decisions?: AgentDecision<TAgent>[];
 };
 
@@ -99,6 +106,10 @@ export type AgentPath<TAgent extends AnyAgent> = {
 
 export type AgentDecision<TAgent extends AnyAgent = AnyAgent> = {
   id: string;
+  /**
+   * The parent decision that this decision is a part of.
+   */
+  decisionId: string | null;
   /**
    * The strategy used to generate the decision
    */
@@ -168,6 +179,7 @@ export type AgentInteractInput<T extends AnyAgent> = Omit<
 };
 
 export type AgentFeedback = {
+  id: string;
   score: number;
   comment: string | undefined;
   attributes: Record<string, any>;
@@ -179,6 +191,7 @@ export type AgentFeedback = {
 );
 
 export type AgentFeedbackInput = {
+  id?: string;
   episodeId?: string;
   score: number;
   comment?: string;
@@ -190,8 +203,12 @@ export type AgentFeedbackInput = {
 );
 
 export type AgentMessage = CoreMessage & {
-  timestamp: number;
   id: string;
+  /**
+   * The parent decision that this message is a part of.
+   */
+  decisionId?: string;
+  timestamp: number;
   /**
    * The response ID of the message, which references
    * which message this message is responding to, if any.
@@ -330,6 +347,9 @@ export type AgentMessageInput = CoreMessage & {
 export interface AgentObservation<TActor extends ActorRefLike> {
   id: string;
   episodeId: string;
+  /**
+   * The decision that this observation is relevant for
+   */
   decisionId?: string | undefined;
   goal?: string;
   prevState: SnapshotFrom<TActor> | undefined;
@@ -539,9 +559,9 @@ export type StorageAdapterQuery<T extends StorageAdapter<any, any>> =
   T extends StorageAdapter<infer _, infer TQuery> ? TQuery : never;
 
 export type AgentInsightInput = {
+  id?: string;
   observationId: string;
   episodeId?: string;
-  id?: string;
   timestamp?: number;
   attributes: Record<string, any>;
 };
@@ -551,4 +571,5 @@ export interface AgentInsight {
   episodeId: string;
   observationId: string;
   timestamp: number;
+  attributes: Record<string, any>;
 }

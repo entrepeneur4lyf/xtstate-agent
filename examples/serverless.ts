@@ -25,7 +25,7 @@ const db = {
   messages: [] as AgentMessage[],
 };
 
-async function postObservation(req) {}
+async function postObservation(req: unknown) {}
 
 async function getDecision(req: {
   query: {

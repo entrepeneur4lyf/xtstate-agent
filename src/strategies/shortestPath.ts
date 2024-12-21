@@ -167,6 +167,7 @@ Examples:
 
   return {
     id: randomId(),
+    decisionId: input.decisionId ?? null,
     strategy: 'shortestPath',
     episodeId: agent.episodeId,
     goal: input.goal,

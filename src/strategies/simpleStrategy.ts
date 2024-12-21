@@ -76,6 +76,7 @@ export async function simpleStrategy<T extends AnyAgent>(
 
   return {
     id: randomId(),
+    decisionId: input.decisionId ?? null,
     strategy: 'simple',
     goal: input.goal,
     goalState: input.state,
