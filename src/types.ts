@@ -31,7 +31,7 @@ export type CostFunction<TAgent extends AnyAgent> = (
 
 export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
   AgentGenerateTextOptions<TAgent>,
-  'model' | 'prompt' | 'tools'
+  'model' | 'prompt' | 'tools' | 'toolChoice'
 > & {
   episodeId?: string;
   /**
@@ -87,6 +87,7 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    * The previous relevant decisions from the agent.
    */
   decisions?: AgentDecision<TAgent>[];
+  toolChoice?: 'auto' | 'none' | 'required';
 };
 
 export type AgentStep<TAgent extends AnyAgent> = {
@@ -214,7 +215,7 @@ export type AgentMessage = CoreMessage & {
    * which message this message is responding to, if any.
    */
   responseId?: string;
-  result?: GenerateTextResult<any>;
+  result?: GenerateTextResult<any, any>;
   episodeId: string;
 };
 
@@ -341,7 +342,7 @@ export type AgentMessageInput = CoreMessage & {
    * which message this message is responding to, if any.
    */
   responseId?: string;
-  result?: GenerateTextResult<any>;
+  result?: GenerateTextResult<any, any>;
 };
 
 export interface AgentObservation<TActor extends ActorRefLike> {

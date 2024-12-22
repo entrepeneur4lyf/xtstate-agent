@@ -1,4 +1,4 @@
-import { CoreMessage, generateText } from 'ai';
+import { CoreToolResult, generateText } from 'ai';
 import {
   AgentDecision,
   AgentDecideInput,
@@ -52,11 +52,11 @@ export async function simpleStrategy<T extends AnyAgent>(
       : undefined;
 
   const result = await generateText({
-    ...rest,
+    // ...rest,
     system: input.system ?? agent.description,
     model,
     messages,
-    tools: toolMap as any,
+    tools: toolMap,
     toolChoice: input.toolChoice ?? 'required',
   });
 
@@ -64,7 +64,11 @@ export async function simpleStrategy<T extends AnyAgent>(
     agent.addMessage(m);
   });
 
-  const singleResult = result.toolResults[0];
+  const singleResult = result.toolResults[0] as unknown as CoreToolResult<
+    any,
+    any,
+    any
+  >;
 
   if (!singleResult) {
     // TODO: retries?

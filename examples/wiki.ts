@@ -21,12 +21,12 @@ agent.onMessage((msg) => {
 });
 
 async function main() {
-  const response = await generateText({
+  const result = await generateText({
     model: agent.model,
     prompt: 'When was Deadpool 2 released?',
   });
 
-  for (const msg of await response.responseMessages) {
+  for (const msg of await result.response.messages) {
     agent.addMessage(msg);
   }
 

@@ -110,7 +110,7 @@ export function fromText<TAgent extends AnyAgent>(
   agent: TAgent,
   options?: AgentGenerateTextOptions<TAgent>
 ): PromiseActorLogic<
-  GenerateTextResult<Record<string, CoreTool<any, any>>>,
+  GenerateTextResult<Record<string, CoreTool<any, any>>, any>,
   Omit<AgentGenerateTextOptions<TAgent>, 'context'> & {
     context?: Record<string, any>;
   }
