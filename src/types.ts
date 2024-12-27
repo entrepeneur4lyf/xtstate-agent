@@ -457,7 +457,7 @@ export type FromAgent<T> = T | ((agent: AnyAgent) => T | Promise<T>);
 export type CommonTextOptions<TAgent extends AnyAgent> = {
   prompt: FromAgent<string>;
   model?: LanguageModel;
-  messages?: FromAgent<CoreMessage[]>;
+  messages?: CoreMessage[];
   template?: PromptTemplate<any>;
   context?: Record<string, any>;
 };

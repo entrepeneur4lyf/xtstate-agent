@@ -28,24 +28,14 @@ import {
  * @param options
  * @returns
  */
-export async function getMessages<TAgent extends AnyAgent>(
-  agent: TAgent,
+export function resolveMessages(
   prompt: string,
-  options: Omit<AgentGenerateTextOptions<TAgent>, 'prompt'>
-): Promise<CoreMessage[]> {
-  let messages: CoreMessage[] = [];
-  if (typeof options.messages === 'function') {
-    messages = await options.messages(agent);
-  } else if (options.messages) {
-    messages = options.messages;
-  }
-
-  messages = messages.concat({
+  messages?: CoreMessage[]
+): CoreMessage[] {
+  return (messages ?? []).concat({
     role: 'user',
     content: prompt,
   });
-
-  return messages;
 }
 
 export function fromTextStream<TAgent extends AnyAgent>(
@@ -73,7 +63,7 @@ export function fromTextStream<TAgent extends AnyAgent>(
         goal,
         context: input.context,
       });
-      const messages = await getMessages(agent, promptWithContext, input);
+      const messages = resolveMessages(promptWithContext, input.messages);
       const result = await streamText({
         ...options,
         ...input,
@@ -132,7 +122,7 @@ export function fromText<TAgent extends AnyAgent>(
       context: input.context,
     });
 
-    const messages = await getMessages(agent, promptWithContext, input);
+    const messages = resolveMessages(promptWithContext, input.messages);
 
     const model = input.model ? agent.wrap(input.model) : agent.model;
 

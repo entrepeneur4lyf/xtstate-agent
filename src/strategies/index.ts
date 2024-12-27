@@ -1,3 +1,3 @@
 export * from './chainOfThought';
 export * from './shortestPath';
-export * from './simpleStrategy'
+export * from './toolStrategy';

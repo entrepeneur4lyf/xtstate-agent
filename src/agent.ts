@@ -1,7 +1,6 @@
 import {
   Actor,
   ActorRefLike,
-  EventObject,
   fromTransition,
   SnapshotFrom,
   Subscription,
@@ -11,14 +10,12 @@ import {
   AgentLogic,
   AgentMessage,
   AgentStrategy,
-  EventsFromZodEventMapping,
   GenerateTextOptions,
   AgentLongTermMemory,
   ObservedState,
   AgentObservationInput,
   AgentMemoryContext,
   AgentObservation,
-  ContextFromZodContextMapping,
   AgentFeedback,
   AgentMessageInput,
   AgentFeedbackInput,
@@ -30,7 +27,7 @@ import {
   AgentInsightInput,
   AgentInsight,
 } from './types';
-import { simpleStrategy } from './strategies/simpleStrategy';
+import { toolStrategy } from './strategies/toolStrategy';
 import { isActorRef, isMachineActor, randomId } from './utils';
 import {
   CoreMessage,
@@ -47,7 +44,6 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         state.feedback.push(event.feedback);
         emit({
           type: 'feedback',
-          // @ts-ignore TODO: fix types in XState
           feedback: event.feedback,
         });
         break;
@@ -56,7 +52,6 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         state.observations.push(event.observation);
         emit({
           type: 'observation',
-          // @ts-ignore TODO: fix types in XState
           observation: event.observation,
         });
         break;
@@ -65,7 +60,6 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         state.messages.push(event.message);
         emit({
           type: 'message',
-          // @ts-ignore TODO: fix types in XState
           message: event.message,
         });
         break;
@@ -87,7 +81,6 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         break;
       }
       default: {
-        // unrecognized
         console.warn('Unrecognized event', event);
         break;
       }
@@ -110,18 +103,18 @@ export function createAgent<
   TAgent extends AnyAgent = Agent<TContextSchema, TEventSchemas>
 >({
   id,
-  description: description,
+  description,
   model,
   events,
   context,
   episodeId,
-  strategy = simpleStrategy,
+  strategy = toolStrategy,
   logic = agentLogic,
 }: {
   /**
    * The unique identifier for the agent.
    *
-   * This should be the same across all sessions of a specific agent, as it can be
+   * This should be the same across all episodes of a specific agent, as it can be
    * used to retrieve memory for previous episodes of this agent.
    *
    * @example
@@ -134,17 +127,21 @@ export function createAgent<
    */
   id?: string;
   /**
-   * A description of the role of the agent
+   * A description of the role of the agent.
    */
   description?: string;
   /**
-   * Events that the agent can cause (send) in an environment
-   * that the agent knows about.
+   * Event schemas for events that the agent can trigger in an environment.
    */
   events: TEventSchemas;
+  /**
+   * The state context schema for the states that the agent can observe.
+   */
   context?: TContextSchema;
+  /**
+   * The default strategy to use for `agent.decide(…)`.
+   */
   strategy?: AgentStrategy<Agent<TContextSchema, TEventSchemas>>;
-  stringify?: typeof JSON.stringify;
   /**
    * A function that retrieves the agent's long term memory
    */
@@ -152,10 +149,19 @@ export function createAgent<
     agent: Agent<TContextSchema, TEventSchemas>
   ) => AgentLongTermMemory<TAgent>;
   /**
-   * Agent logic
+   * Custom agent logic, which receives events for handling feedback,
+   * observations, messages, decisions, and insights.
    */
   logic?: AgentLogic<TAgent>;
+  /**
+   * The default language model for the agent to use in `agent.decide(…)`.
+   */
   model: LanguageModel;
+  /**
+   * The unique episode ID that this agent will run on.
+   *
+   * An episode is an instance of an agent interacting with an environment.
+   */
   episodeId?: string;
 }): Agent<TContextSchema, TEventSchemas> {
   return new Agent({
@@ -163,7 +169,7 @@ export function createAgent<
     context,
     events,
     description,
-    strategy: strategy,
+    strategy,
     model,
     logic,
     episodeId,
@@ -199,7 +205,7 @@ export class Agent<
     events,
     context,
     episodeId,
-    strategy = simpleStrategy,
+    strategy = toolStrategy,
   }: {
     logic: AgentLogic<any>;
     id?: string;

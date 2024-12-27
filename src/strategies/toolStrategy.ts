@@ -7,7 +7,7 @@ import {
 } from '../types';
 import { convertToXml, randomId } from '../utils';
 import { transition } from 'xstate';
-import { getMessages } from '../text';
+import { resolveMessages } from '../text';
 import { getToolMap } from '../decide';
 
 const simpleStrategyPromptTemplate: PromptTemplate<any> = (data) => {
@@ -18,10 +18,10 @@ Make at most one tool call to achieve the above goal. If the goal cannot be achi
   `.trim();
 };
 
-export async function simpleStrategy<T extends AnyAgent>(
-  agent: T,
-  input: AgentDecideInput<any>
-): Promise<AgentDecision<any> | undefined> {
+export async function toolStrategy<TAgent extends AnyAgent>(
+  agent: TAgent,
+  input: AgentDecideInput<TAgent>
+): Promise<AgentDecision<TAgent> | undefined> {
   const toolMap = getToolMap(agent, input);
 
   if (!toolMap) {
@@ -37,7 +37,7 @@ export async function simpleStrategy<T extends AnyAgent>(
     goal: input.goal,
   });
 
-  const messages = await getMessages(agent, prompt, input);
+  const messages = resolveMessages(prompt, input.messages);
 
   const model = input.model ? agent.wrap(input.model) : agent.model;
 
@@ -52,7 +52,7 @@ export async function simpleStrategy<T extends AnyAgent>(
       : undefined;
 
   const result = await generateText({
-    // ...rest,
+    ...rest,
     system: input.system ?? agent.description,
     model,
     messages,

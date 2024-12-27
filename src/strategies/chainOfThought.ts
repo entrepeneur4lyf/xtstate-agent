@@ -5,8 +5,8 @@ import {
   AgentDecision,
   PromptTemplate,
 } from '../types';
-import { getMessages } from '../text';
-import { simpleStrategy } from './simpleStrategy';
+import { resolveMessages } from '../text';
+import { toolStrategy } from './toolStrategy';
 import { convertToXml } from '../utils';
 
 const chainOfThoughtPromptTemplate: PromptTemplate<any> = ({
@@ -14,11 +14,9 @@ const chainOfThoughtPromptTemplate: PromptTemplate<any> = ({
   context,
   goal,
 }) => {
-  return `
-${convertToXml({ stateValue, context, goal })}
+  return `${convertToXml({ stateValue, context, goal })}
 
-How would you achieve the goal? Think step-by-step.
-`.trim();
+How would you achieve the goal? Think step-by-step.`;
 };
 
 export async function chainOfThoughtStrategy<T extends AnyAgent>(
@@ -31,7 +29,7 @@ export async function chainOfThoughtStrategy<T extends AnyAgent>(
     goal: input.goal,
   });
 
-  const messages = await getMessages(agent, prompt, input);
+  const messages = resolveMessages(prompt, input.messages);
 
   const model = input.model ? agent.wrap(input.model) : agent.model;
 
@@ -41,7 +39,7 @@ export async function chainOfThoughtStrategy<T extends AnyAgent>(
     messages,
   });
 
-  const decision = await simpleStrategy(agent, {
+  const decision = await toolStrategy(agent, {
     ...input,
     messages: messages.concat(result.response.messages),
   });
