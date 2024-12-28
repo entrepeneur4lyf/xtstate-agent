@@ -267,8 +267,12 @@ xAgent.interact(actor, (observed) => {
 
     console.log('Similar:', similarObservations);
 
-    const similarFeedbacks = similarObservations.map((o) => {
-      return xAgent.getFeedback().filter((f) => f.observationId === o.id);
+    const similarFeedbacks = similarObservations.map((observation) => {
+      return xAgent
+        .getFeedback()
+        .filter(
+          (feedbackItem) => feedbackItem.decisionId === observation.decisionId
+        );
     });
 
     console.log('Feedbacks:', similarFeedbacks);

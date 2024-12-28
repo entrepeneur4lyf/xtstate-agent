@@ -30,10 +30,9 @@ export type CostFunction<TAgent extends AnyAgent> = (
 ) => number;
 
 export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
-  AgentGenerateTextOptions<TAgent>,
+  AgentGenerateTextOptions,
   'model' | 'prompt' | 'tools' | 'toolChoice'
 > & {
-  episodeId?: string;
   /**
    * The parent decision that this decision is a part of.
    */
@@ -92,7 +91,7 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    */
   insights?: AgentInsight[];
   toolChoice?: 'auto' | 'none' | 'required';
-};
+} & CommonInput;
 
 export type AgentStep<TAgent extends AnyAgent> = {
   /** The event to take */
@@ -193,14 +192,19 @@ export interface AgentFeedback {
   episodeId: string;
 }
 
-export interface AgentFeedbackInput {
-  decisionId: string;
-  id?: string;
+export interface CommonInput {
+  timestamp?: number;
   episodeId?: string;
+  id?: string;
+}
+export interface AgentFeedbackInput extends CommonInput {
+  /**
+   * The decision ID that this feedback is relevant for.
+   */
+  decisionId: string;
   score: number;
   comment?: string;
   attributes?: Record<string, any>;
-  timestamp?: number;
 }
 
 export type AgentMessage = CoreMessage & {
@@ -229,24 +233,6 @@ type LanguageModelV1ProviderMetadata = Record<
   string,
   Record<string, JSONValue>
 >;
-
-interface LanguageModelV1ImagePart {
-  type: 'image';
-  /**
-Image data as a Uint8Array (e.g. from a Blob or Buffer) or a URL.
-   */
-  image: Uint8Array | URL;
-  /**
-Optional mime type of the image.
-   */
-  mimeType?: string;
-  /**
-   * Additional provider-specific metadata. They are passed through
-   * to the provider from the AI SDK and enable provider-specific
-   * functionality that can be fully encapsulated in the provider.
-   */
-  providerMetadata?: LanguageModelV1ProviderMetadata;
-}
 
 export interface LanguageModelV1TextPart {
   type: 'text';
@@ -283,56 +269,6 @@ Arguments of the tool call. This is a JSON-serializable object that matches the 
    */
   providerMetadata?: LanguageModelV1ProviderMetadata;
 }
-interface LanguageModelV1ToolResultPart {
-  type: 'tool-result';
-  /**
-ID of the tool call that this result is associated with.
- */
-  toolCallId: string;
-  /**
-Name of the tool that generated this result.
-  */
-  toolName: string;
-  /**
-Result of the tool call. This is a JSON-serializable object.
-   */
-  result: unknown;
-  /**
-Optional flag if the result is an error or an error message.
-   */
-  isError?: boolean;
-  /**
-   * Additional provider-specific metadata. They are passed through
-   * to the provider from the AI SDK and enable provider-specific
-   * functionality that can be fully encapsulated in the provider.
-   */
-  providerMetadata?: LanguageModelV1ProviderMetadata;
-}
-type LanguageModelV1Message = (
-  | {
-      role: 'system';
-      content: string;
-    }
-  | {
-      role: 'user';
-      content: Array<LanguageModelV1TextPart | LanguageModelV1ImagePart>;
-    }
-  | {
-      role: 'assistant';
-      content: Array<LanguageModelV1TextPart | LanguageModelV1ToolCallPart>;
-    }
-  | {
-      role: 'tool';
-      content: Array<LanguageModelV1ToolResultPart>;
-    }
-) & {
-  /**
-   * Additional provider-specific metadata. They are passed through
-   * to the provider from the AI SDK and enable provider-specific
-   * functionality that can be fully encapsulated in the provider.
-   */
-  providerMetadata?: LanguageModelV1ProviderMetadata;
-};
 
 export type AgentMessageInput = CoreMessage & {
   timestamp?: number;
@@ -454,7 +390,7 @@ export type AnyAgent = Agent<any, any>;
 
 export type FromAgent<T> = T | ((agent: AnyAgent) => T | Promise<T>);
 
-export type CommonTextOptions<TAgent extends AnyAgent> = {
+export type CommonTextOptions = {
   prompt: FromAgent<string>;
   model?: LanguageModel;
   messages?: CoreMessage[];
@@ -462,17 +398,17 @@ export type CommonTextOptions<TAgent extends AnyAgent> = {
   context?: Record<string, any>;
 };
 
-export type AgentGenerateTextOptions<TAgent extends AnyAgent> = Omit<
+export type AgentGenerateTextOptions = Omit<
   GenerateTextOptions,
   'model' | 'prompt' | 'messages'
 > &
-  CommonTextOptions<TAgent>;
+  CommonTextOptions;
 
-export type AgentStreamTextOptions<TAgent extends AnyAgent> = Omit<
+export type AgentStreamTextOptions = Omit<
   StreamTextOptions,
   'model' | 'prompt' | 'messages'
 > &
-  CommonTextOptions<TAgent>;
+  CommonTextOptions;
 
 export interface ObservedState<TAgent extends AnyAgent> {
   /**

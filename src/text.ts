@@ -40,10 +40,10 @@ export function resolveMessages(
 
 export function fromTextStream<TAgent extends AnyAgent>(
   agent: TAgent,
-  options?: AgentStreamTextOptions<TAgent>
+  options?: AgentStreamTextOptions
 ): ObservableActorLogic<
   { textDelta: string },
-  Omit<AgentStreamTextOptions<TAgent>, 'context'> & {
+  Omit<AgentStreamTextOptions, 'context'> & {
     context?: Record<string, any>;
   }
 > {
@@ -98,10 +98,10 @@ export function fromTextStream<TAgent extends AnyAgent>(
 
 export function fromText<TAgent extends AnyAgent>(
   agent: TAgent,
-  options?: AgentGenerateTextOptions<TAgent>
+  options?: AgentGenerateTextOptions
 ): PromiseActorLogic<
   GenerateTextResult<Record<string, CoreTool<any, any>>, any>,
-  Omit<AgentGenerateTextOptions<TAgent>, 'context'> & {
+  Omit<AgentGenerateTextOptions, 'context'> & {
     context?: Record<string, any>;
   }
 > {

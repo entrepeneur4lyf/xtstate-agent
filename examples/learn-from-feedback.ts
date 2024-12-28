@@ -35,7 +35,7 @@ async function main() {
         const relevantFeedback = await agent
           .getFeedback()
           .filter((f) =>
-            relevantObservations.find((o) => o.id === f.observationId)
+            relevantObservations.find((o) => o.decisionId === f.decisionId)
           );
 
         const decision = await agent.decide({
@@ -79,7 +79,7 @@ Achieve the goal. Consider both exploring unknown actions (high exploration_valu
         });
 
         if (decision?.nextEvent?.type === 'submit') {
-          const observation = await agent.addObservation({
+          const observation = agent.addObservation({
             decisionId: decision.id,
             prevState: { value: 'editing' },
             event: { type: 'submit' },
@@ -87,8 +87,8 @@ Achieve the goal. Consider both exploring unknown actions (high exploration_valu
           });
 
           // don't change the status; pretend submit button is broken
-          await agent.addFeedback({
-            observationId: observation.id,
+          agent.addFeedback({
+            decisionId: observation.id,
             score: 0,
             comment: 'Form not submitted',
           });
