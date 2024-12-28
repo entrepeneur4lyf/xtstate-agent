@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createAgent } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { getFromTerminal } from './helpers/helpers';
-import { chainOfThoughtStrategy } from '../src/strategies/chainOfThought';
+import { chainOfThoughtPolicy } from '../src/policies/chainOfThoughtPolicy';
 
 const agent = createAgent({
   id: 'chain-of-thought',
@@ -15,7 +15,7 @@ const agent = createAgent({
   context: {
     question: z.string().nullable(),
   },
-  strategy: chainOfThoughtStrategy,
+  policy: chainOfThoughtPolicy,
 });
 
 // agent.onMessage((msg) => console.log(msg.content));

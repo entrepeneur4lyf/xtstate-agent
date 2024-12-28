@@ -87,7 +87,7 @@ test('agent.addFeedback() adds to feedback', () => {
     id: 'decision-1',
     nextEvent: { type: 'play', position: 3 },
     paths: [],
-    strategy: 'simple',
+    policy: 'simple',
     timestamp: Date.now(),
   };
 
@@ -99,7 +99,7 @@ test('agent.addFeedback() adds to feedback', () => {
   });
 
   const feedback = agent.addFeedback({
-    score: 0,
+    reward: 0,
     decisionId: decision.id,
   });
 
@@ -107,7 +107,7 @@ test('agent.addFeedback() adds to feedback', () => {
 
   expect(agent.getFeedback()).toContainEqual(
     expect.objectContaining({
-      score: 0,
+      reward: 0,
       decisionId: decision.id,
       episodeId: expect.any(String),
       timestamp: expect.any(Number),
@@ -303,7 +303,7 @@ test('You can listen for feedback events', () => {
   agent.onFeedback(fn);
 
   agent.addFeedback({
-    score: 1,
+    reward: 1,
     decisionId: 'dec-1',
     comment: 'Good move',
     attributes: { confidence: 'high' },
@@ -311,7 +311,7 @@ test('You can listen for feedback events', () => {
 
   expect(fn).toHaveBeenCalledWith(
     expect.objectContaining({
-      score: 1,
+      reward: 1,
       decisionId: 'dec-1',
       comment: 'Good move',
       attributes: { confidence: 'high' },
@@ -457,12 +457,12 @@ test('agent.getDecisions() returns decisions from context', () => {
     id: 'test',
     events: {},
     model: {} as any,
-    strategy: async (agent) => {
+    policy: async (agent) => {
       return {
         id: Date.now().toString(),
         decisionId: null,
         episodeId: agent.episodeId,
-        strategy: 'test-strategy',
+        policy: 'test-policy',
         goal: '',
         goalState: undefined,
         paths: [
@@ -581,7 +581,7 @@ test('agent.addFeedback() accepts custom episodeId', () => {
 
   const customEpisodeId = 'custom-episode-123';
   const feedback = agent.addFeedback({
-    score: 1,
+    reward: 1,
     decisionId: 'dec-1',
     episodeId: customEpisodeId,
   });
@@ -625,7 +625,7 @@ test('agent.addFeedback() accepts decisionId', () => {
 
   const decisionId = 'decision-123';
   const feedback = agent.addFeedback({
-    score: 1,
+    reward: 1,
     decisionId,
   });
 
@@ -677,7 +677,7 @@ test('You can listen for decision events', () => {
     id: 'decision-1',
     decisionId: null,
     episodeId: agent.episodeId,
-    strategy: 'test-strategy',
+    policy: 'test-policy',
     goal: 'Win the game',
     goalState: { value: 'won' },
     paths: [],
@@ -691,7 +691,7 @@ test('You can listen for decision events', () => {
     expect.objectContaining({
       id: 'decision-1',
       episodeId: agent.episodeId,
-      strategy: 'test-strategy',
+      policy: 'test-policy',
       goal: 'Win the game',
       nextEvent: { type: 'MOVE' },
     })
@@ -741,7 +741,7 @@ test('Event listeners can be unsubscribed (onDecision)', () => {
     id: 'decision-1',
     decisionId: null,
     episodeId: agent.episodeId,
-    strategy: 'test-strategy',
+    policy: 'test-policy',
     goal: 'Win the game',
     goalState: { value: 'won' },
     paths: [],
@@ -774,7 +774,7 @@ test('Event listeners can be unsubscribed (onFeedback)', () => {
   const subscription = agent.onFeedback(fn);
 
   agent.addFeedback({
-    score: 1,
+    reward: 1,
     decisionId: 'dec-1',
   });
 
@@ -783,7 +783,7 @@ test('Event listeners can be unsubscribed (onFeedback)', () => {
   subscription.unsubscribe();
 
   agent.addFeedback({
-    score: 0,
+    reward: 0,
     decisionId: 'dec-2',
   });
 
@@ -802,13 +802,13 @@ test('Feedback events include optional fields', () => {
 
   // Test with minimal feedback
   agent.addFeedback({
-    score: 1,
+    reward: 1,
     decisionId: 'dec-1',
   });
 
   expect(fn).toHaveBeenCalledWith(
     expect.objectContaining({
-      score: 1,
+      reward: 1,
       decisionId: 'dec-1',
       comment: undefined,
       attributes: {},
@@ -819,7 +819,7 @@ test('Feedback events include optional fields', () => {
 
   // Test with all optional fields
   agent.addFeedback({
-    score: 0,
+    reward: 0,
     decisionId: 'dec-2',
     comment: 'Could be better',
     attributes: { reason: 'suboptimal' },
@@ -827,7 +827,7 @@ test('Feedback events include optional fields', () => {
 
   expect(fn).toHaveBeenLastCalledWith(
     expect.objectContaining({
-      score: 0,
+      reward: 0,
       decisionId: 'dec-2',
       comment: 'Could be better',
       attributes: { reason: 'suboptimal' },
@@ -851,7 +851,7 @@ test('Feedback events maintain episodeId consistency', () => {
   agent.onFeedback(fn);
 
   agent.addFeedback({
-    score: 1,
+    reward: 1,
     decisionId: 'dec-1',
   });
 
@@ -864,7 +864,7 @@ test('Feedback events maintain episodeId consistency', () => {
   // Test with explicit different episodeId
   const differentEpisodeId = 'different-episode-456';
   agent.addFeedback({
-    score: 0,
+    reward: 0,
     decisionId: 'dec-2',
     episodeId: differentEpisodeId,
   });

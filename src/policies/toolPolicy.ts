@@ -7,10 +7,10 @@ import {
 } from '../types';
 import { convertToXml, randomId } from '../utils';
 import { transition } from 'xstate';
-import { resolveMessages } from '../text';
+import { combinePromptAndMessages } from '../text';
 import { getToolMap } from '../decide';
 
-const simpleStrategyPromptTemplate: PromptTemplate<any> = (data) => {
+const toolPolicyPromptTemplate: PromptTemplate<any> = (data) => {
   return `
 ${convertToXml(data)}
 
@@ -18,7 +18,7 @@ Make at most one tool call to achieve the above goal. If the goal cannot be achi
   `.trim();
 };
 
-export async function toolStrategy<TAgent extends AnyAgent>(
+export async function toolPolicy<TAgent extends AnyAgent>(
   agent: TAgent,
   input: AgentDecideInput<TAgent>
 ): Promise<AgentDecision<TAgent> | undefined> {
@@ -31,13 +31,13 @@ export async function toolStrategy<TAgent extends AnyAgent>(
 
   // Create a prompt with the given context and goal.
   // The template is used to ensure that a single tool call at most is made.
-  const prompt = simpleStrategyPromptTemplate({
+  const prompt = toolPolicyPromptTemplate({
     stateValue: input.state.value,
     context: input.context ?? input.state.context,
     goal: input.goal,
   });
 
-  const messages = resolveMessages(prompt, input.messages);
+  const messages = combinePromptAndMessages(prompt, input.messages);
 
   const model = input.model ? agent.wrap(input.model) : agent.model;
 
@@ -81,7 +81,7 @@ export async function toolStrategy<TAgent extends AnyAgent>(
   return {
     id: randomId(),
     decisionId: input.decisionId ?? null,
-    strategy: 'simple',
+    policy: 'simple',
     goal: input.goal,
     goalState: input.state,
     nextEvent,

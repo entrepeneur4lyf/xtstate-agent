@@ -2,7 +2,7 @@ import { createAgent, fromDecision } from '../src';
 import { z } from 'zod';
 import { setup, createActor, createMachine } from 'xstate';
 import { openai } from '@ai-sdk/openai';
-import { chainOfThoughtStrategy } from '../src/strategies/chainOfThought';
+import { chainOfThoughtPolicy } from '../src/policies/chainOfThoughtPolicy';
 
 const agent = createAgent({
   id: 'simple',

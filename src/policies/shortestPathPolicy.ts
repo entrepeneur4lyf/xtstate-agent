@@ -2,7 +2,7 @@ import { generateObject } from 'ai';
 import {
   AgentDecision,
   AgentDecideInput,
-  AgentStrategy,
+  AgentPolicy,
   AgentStep,
   AnyAgent,
   CostFunction,
@@ -40,14 +40,14 @@ function trimSteps(steps: AgentStep<any>[], currentState: ObservedState<any>) {
   return steps.slice(index + 1, steps.length);
 }
 
-export async function experimental_shortestPathStrategy<T extends AnyAgent>(
+export async function experimental_shortestPathPolicy<T extends AnyAgent>(
   agent: T,
   input: AgentDecideInput<any>
 ): Promise<AgentDecision<any> | undefined> {
   const costFunction: CostFunction<any> =
     input.costFunction ?? ((path) => path.weight ?? Infinity);
   const existingDecision = input.decisions?.find(
-    (p) => p.strategy === 'shortestPath' && p.goal === input.goal
+    (p) => p.policy === 'shortestPath' && p.goal === input.goal
   );
 
   let paths = existingDecision?.paths;
@@ -168,7 +168,7 @@ Examples:
   return {
     id: randomId(),
     decisionId: input.decisionId ?? null,
-    strategy: 'shortestPath',
+    policy: 'shortestPath',
     episodeId: agent.episodeId,
     goal: input.goal,
     goalState: paths[0]?.state,

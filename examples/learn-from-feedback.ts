@@ -89,7 +89,7 @@ Achieve the goal. Consider both exploring unknown actions (high exploration_valu
           // don't change the status; pretend submit button is broken
           agent.addFeedback({
             decisionId: observation.id,
-            score: 0,
+            reward: 0,
             comment: 'Form not submitted',
           });
         } else if (decision?.nextEvent?.type === 'pressEnter') {

@@ -72,7 +72,7 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    * Defaults to 2.
    */
   maxAttempts?: number;
-  strategy?: AgentStrategy<TAgent>;
+  policy?: AgentPolicy<TAgent>;
   model?: LanguageModel;
   /**
    * The previous relevant feedback from the agent.
@@ -115,9 +115,9 @@ export type AgentDecision<TAgent extends AnyAgent = AnyAgent> = {
    */
   decisionId: string | null;
   /**
-   * The strategy used to generate the decision
+   * The policy used to generate the decision
    */
-  strategy: string;
+  policy: string;
   goal: string;
   /**
    * The ending state of the decision.
@@ -170,7 +170,7 @@ export type PromptTemplate<TAgent extends AnyAgent> = (data: {
   decisions?: AgentDecision<TAgent>[];
 }) => string;
 
-export type AgentStrategy<TAgent extends AnyAgent> = (
+export type AgentPolicy<TAgent extends AnyAgent> = (
   agent: TAgent,
   input: AgentDecideInput<TAgent>
 ) => Promise<AgentDecision<TAgent> | undefined>;
@@ -185,7 +185,7 @@ export type AgentInteractInput<T extends AnyAgent> = Omit<
 export interface AgentFeedback {
   decisionId: string;
   id: string;
-  score: number;
+  reward: number;
   comment: string | undefined;
   attributes: Record<string, any>;
   timestamp: number;
@@ -202,7 +202,7 @@ export interface AgentFeedbackInput extends CommonInput {
    * The decision ID that this feedback is relevant for.
    */
   decisionId: string;
-  score: number;
+  reward: number;
   comment?: string;
   attributes?: Record<string, any>;
 }

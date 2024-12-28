@@ -5,8 +5,8 @@ import {
   AgentDecision,
   PromptTemplate,
 } from '../types';
-import { resolveMessages } from '../text';
-import { toolStrategy } from './toolStrategy';
+import { combinePromptAndMessages } from '../text';
+import { toolPolicy } from './toolPolicy';
 import { convertToXml } from '../utils';
 
 const chainOfThoughtPromptTemplate: PromptTemplate<any> = ({
@@ -19,7 +19,7 @@ const chainOfThoughtPromptTemplate: PromptTemplate<any> = ({
 How would you achieve the goal? Think step-by-step.`;
 };
 
-export async function chainOfThoughtStrategy<T extends AnyAgent>(
+export async function chainOfThoughtPolicy<T extends AnyAgent>(
   agent: T,
   input: AgentDecideInput<any>
 ): Promise<AgentDecision<any> | undefined> {
@@ -29,7 +29,7 @@ export async function chainOfThoughtStrategy<T extends AnyAgent>(
     goal: input.goal,
   });
 
-  const messages = resolveMessages(prompt, input.messages);
+  const messages = combinePromptAndMessages(prompt, input.messages);
 
   const model = input.model ? agent.wrap(input.model) : agent.model;
 
@@ -39,7 +39,7 @@ export async function chainOfThoughtStrategy<T extends AnyAgent>(
     messages,
   });
 
-  const decision = await toolStrategy(agent, {
+  const decision = await toolPolicy(agent, {
     ...input,
     messages: messages.concat(result.response.messages),
   });

@@ -28,7 +28,7 @@ import {
  * @param options
  * @returns
  */
-export function resolveMessages(
+export function combinePromptAndMessages(
   prompt: string,
   messages?: CoreMessage[]
 ): CoreMessage[] {
@@ -63,7 +63,10 @@ export function fromTextStream<TAgent extends AnyAgent>(
         goal,
         context: input.context,
       });
-      const messages = resolveMessages(promptWithContext, input.messages);
+      const messages = combinePromptAndMessages(
+        promptWithContext,
+        input.messages
+      );
       const result = await streamText({
         ...options,
         ...input,
@@ -122,7 +125,10 @@ export function fromText<TAgent extends AnyAgent>(
       context: input.context,
     });
 
-    const messages = resolveMessages(promptWithContext, input.messages);
+    const messages = combinePromptAndMessages(
+      promptWithContext,
+      input.messages
+    );
 
     const model = input.model ? agent.wrap(input.model) : agent.model;
 

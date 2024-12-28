@@ -154,7 +154,7 @@ test('interacts with an actor (late interaction)', async () => {
   expect(actor.getSnapshot().value).toBe('third');
 });
 
-test('agent.decide() makes a decision based on goal and state (simple strategy)', async () => {
+test('agent.decide() makes a decision based on goal and state (tool policy)', async () => {
   const model = new MockLanguageModelV1({
     doGenerate,
   });

@@ -9,7 +9,7 @@ import { ZodContextMapping, ZodEventMapping } from './schemas';
 import {
   AgentLogic,
   AgentMessage,
-  AgentStrategy,
+  AgentPolicy,
   GenerateTextOptions,
   AgentLongTermMemory,
   ObservedState,
@@ -27,7 +27,7 @@ import {
   AgentInsightInput,
   AgentInsight,
 } from './types';
-import { toolStrategy } from './strategies/toolStrategy';
+import { toolPolicy } from './policies/toolPolicy';
 import { isActorRef, isMachineActor, randomId } from './utils';
 import {
   CoreMessage,
@@ -108,7 +108,7 @@ export function createAgent<
   events,
   context,
   episodeId,
-  strategy = toolStrategy,
+  policy = toolPolicy,
   logic = agentLogic,
 }: {
   /**
@@ -139,9 +139,11 @@ export function createAgent<
    */
   context?: TContextSchema;
   /**
-   * The default strategy to use for `agent.decide(…)`.
+   * The default policy to use for `agent.decide(…)`.
+   *
+   * A policy is a strategy that the agent uses to decide which event to trigger next.
    */
-  strategy?: AgentStrategy<Agent<TContextSchema, TEventSchemas>>;
+  policy?: AgentPolicy<Agent<TContextSchema, TEventSchemas>>;
   /**
    * A function that retrieves the agent's long term memory
    */
@@ -169,7 +171,7 @@ export function createAgent<
     context,
     events,
     description,
-    strategy,
+    policy: policy,
     model,
     logic,
     episodeId,
@@ -192,7 +194,7 @@ export class Agent<
   public description?: string;
   public events: TEventSchemas;
   public context?: TContextSchema;
-  public strategy: AgentStrategy<Agent<TContextSchema, TEventSchemas>>;
+  public policy: AgentPolicy<Agent<TContextSchema, TEventSchemas>>;
   public model: LanguageModel;
   public memory: AgentLongTermMemory<this> | undefined;
 
@@ -205,7 +207,7 @@ export class Agent<
     events,
     context,
     episodeId,
-    strategy = toolStrategy,
+    policy = toolPolicy,
   }: {
     logic: AgentLogic<any>;
     id?: string;
@@ -214,7 +216,7 @@ export class Agent<
     model: GenerateTextOptions['model'];
     events: TEventSchemas;
     context?: TContextSchema;
-    strategy?: AgentStrategy<Agent<TContextSchema, TEventSchemas>>;
+    policy?: AgentPolicy<Agent<TContextSchema, TEventSchemas>>;
     episodeId?: string;
   }) {
     super(logic);
@@ -224,7 +226,7 @@ export class Agent<
     this.description = description;
     this.events = events;
     this.context = context;
-    this.strategy = strategy;
+    this.policy = policy;
     this.id = id ?? randomId();
 
     this.start();
@@ -571,7 +573,7 @@ export class Agent<
   ): Promise<AgentDecision<this> | undefined> {
     const resolvedOptions = input;
     const {
-      strategy = this.strategy,
+      policy = this.policy,
       goal,
       allowedEvents,
       events = this.events,
@@ -602,7 +604,7 @@ export class Agent<
     };
 
     while (attempts++ < maxAttempts) {
-      decision = await strategy(this, {
+      decision = await policy(this, {
         episodeId,
         model,
         goal,
