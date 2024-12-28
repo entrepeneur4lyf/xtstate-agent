@@ -87,6 +87,10 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    * The previous relevant decisions from the agent.
    */
   decisions?: AgentDecision<TAgent>[];
+  /**
+   * The previous relevant insights from the agent.
+   */
+  insights?: AgentInsight[];
   toolChoice?: 'auto' | 'none' | 'required';
 };
 
@@ -179,29 +183,25 @@ export type AgentInteractInput<T extends AnyAgent> = Omit<
   state?: never;
 };
 
-export type AgentFeedback = {
+export interface AgentFeedback {
+  decisionId: string;
   id: string;
   score: number;
   comment: string | undefined;
   attributes: Record<string, any>;
   timestamp: number;
   episodeId: string;
-} & (
-  | { observationId: string; decisionId?: never }
-  | { decisionId: string; observationId?: never }
-);
+}
 
-export type AgentFeedbackInput = {
+export interface AgentFeedbackInput {
+  decisionId: string;
   id?: string;
   episodeId?: string;
   score: number;
   comment?: string;
   attributes?: Record<string, any>;
   timestamp?: number;
-} & (
-  | { observationId: string; decisionId?: never }
-  | { decisionId: string; observationId?: never }
-);
+}
 
 export type AgentMessage = CoreMessage & {
   id: string;

@@ -2,6 +2,7 @@ import { openai } from '@ai-sdk/openai';
 import {
   AgentDecision,
   AgentFeedback,
+  AgentInsight,
   AgentMessage,
   AgentObservation,
   createAgent,
@@ -23,6 +24,7 @@ const db = {
   feedbackItems: [] as AgentFeedback[],
   decisions: [] as AgentDecision[],
   messages: [] as AgentMessage[],
+  insights: [] as AgentInsight[],
 };
 
 async function postObservation(req: unknown) {}
@@ -42,9 +44,12 @@ async function getDecision(req: {
   );
 
   const similarFeedback = db.feedbackItems.filter((fb) => {
-    fb.observationId &&
-      similarObservations.map((obs) => obs.id).includes(fb.observationId);
+    similarObservations.map((obs) => obs.decisionId).includes(fb.decisionId);
   });
+
+  const insights = db.insights.filter((insight) =>
+    similarObservations.map((obs) => obs.id).includes(insight.observationId)
+  );
 
   agent.onDecision(async (d) => {
     db.decisions.push(d);
@@ -60,6 +65,7 @@ async function getDecision(req: {
     state: lastObs?.state,
     observations: similarObservations,
     feedback: similarFeedback,
+    insights,
     allowedEvents: ['agent.moveLeft', 'agent.moveRight'],
   });
 

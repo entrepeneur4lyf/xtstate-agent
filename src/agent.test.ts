@@ -100,7 +100,7 @@ test('agent.addFeedback() adds to feedback', () => {
 
   const feedback = agent.addFeedback({
     score: 0,
-    observationId: obs.id,
+    decisionId: decision.id,
   });
 
   expect(feedback.episodeId).toEqual(agent.episodeId);
@@ -108,7 +108,7 @@ test('agent.addFeedback() adds to feedback', () => {
   expect(agent.getFeedback()).toContainEqual(
     expect.objectContaining({
       score: 0,
-      observationId: obs.id,
+      decisionId: decision.id,
       episodeId: expect.any(String),
       timestamp: expect.any(Number),
     })
@@ -245,45 +245,6 @@ test('agent.addInsight() adds to insights (with observation)', () => {
   );
 });
 
-test('agent.addFeedback() adds to feedback (with observation)', () => {
-  const agent = createAgent({
-    id: 'test',
-    events: {},
-    model: {} as any,
-  });
-
-  const observation = agent.addObservation({
-    state: {
-      value: 'playing',
-    },
-    goal: 'Win the game',
-  });
-
-  const feedback = agent.addFeedback({
-    score: 0,
-    observationId: observation.id,
-  });
-
-  expect(feedback.episodeId).toEqual(agent.episodeId);
-
-  expect(agent.getFeedback()).toContainEqual(
-    expect.objectContaining({
-      score: 0,
-      observationId: observation.id,
-      episodeId: expect.any(String),
-      timestamp: expect.any(Number),
-    })
-  );
-  expect(agent.getFeedback()).toContainEqual(
-    expect.objectContaining({
-      score: 0,
-      observationId: observation.id,
-      episodeId: expect.any(String),
-      timestamp: expect.any(Number),
-    })
-  );
-});
-
 test('agent.interact() observes machine actors (no 2nd arg)', () => {
   const machine = createMachine({
     initial: 'a',
@@ -341,9 +302,9 @@ test('You can listen for feedback events', () => {
 
   agent.onFeedback(fn);
 
-  const feedback = agent.addFeedback({
+  agent.addFeedback({
     score: 1,
-    observationId: 'obs-1',
+    decisionId: 'dec-1',
     comment: 'Good move',
     attributes: { confidence: 'high' },
   });
@@ -351,7 +312,7 @@ test('You can listen for feedback events', () => {
   expect(fn).toHaveBeenCalledWith(
     expect.objectContaining({
       score: 1,
-      observationId: 'obs-1',
+      decisionId: 'dec-1',
       comment: 'Good move',
       attributes: { confidence: 'high' },
       episodeId: expect.any(String),
@@ -621,7 +582,7 @@ test('agent.addFeedback() accepts custom episodeId', () => {
   const customEpisodeId = 'custom-episode-123';
   const feedback = agent.addFeedback({
     score: 1,
-    observationId: 'obs-1',
+    decisionId: 'dec-1',
     episodeId: customEpisodeId,
   });
 
@@ -814,7 +775,7 @@ test('Event listeners can be unsubscribed (onFeedback)', () => {
 
   agent.addFeedback({
     score: 1,
-    observationId: 'obs-1',
+    decisionId: 'dec-1',
   });
 
   expect(fn).toHaveBeenCalledTimes(1);
@@ -823,7 +784,7 @@ test('Event listeners can be unsubscribed (onFeedback)', () => {
 
   agent.addFeedback({
     score: 0,
-    observationId: 'obs-2',
+    decisionId: 'dec-2',
   });
 
   expect(fn).toHaveBeenCalledTimes(1); // Still only called once
@@ -842,13 +803,13 @@ test('Feedback events include optional fields', () => {
   // Test with minimal feedback
   agent.addFeedback({
     score: 1,
-    observationId: 'obs-1',
+    decisionId: 'dec-1',
   });
 
   expect(fn).toHaveBeenCalledWith(
     expect.objectContaining({
       score: 1,
-      observationId: 'obs-1',
+      decisionId: 'dec-1',
       comment: undefined,
       attributes: {},
       episodeId: expect.any(String),
@@ -859,7 +820,7 @@ test('Feedback events include optional fields', () => {
   // Test with all optional fields
   agent.addFeedback({
     score: 0,
-    observationId: 'obs-2',
+    decisionId: 'dec-2',
     comment: 'Could be better',
     attributes: { reason: 'suboptimal' },
   } satisfies AgentFeedbackInput);
@@ -867,7 +828,7 @@ test('Feedback events include optional fields', () => {
   expect(fn).toHaveBeenLastCalledWith(
     expect.objectContaining({
       score: 0,
-      observationId: 'obs-2',
+      decisionId: 'dec-2',
       comment: 'Could be better',
       attributes: { reason: 'suboptimal' },
       episodeId: expect.any(String),
@@ -891,7 +852,7 @@ test('Feedback events maintain episodeId consistency', () => {
 
   agent.addFeedback({
     score: 1,
-    observationId: 'obs-1',
+    decisionId: 'dec-1',
   });
 
   expect(fn).toHaveBeenCalledWith(
@@ -904,7 +865,7 @@ test('Feedback events maintain episodeId consistency', () => {
   const differentEpisodeId = 'different-episode-456';
   agent.addFeedback({
     score: 0,
-    observationId: 'obs-2',
+    decisionId: 'dec-2',
     episodeId: differentEpisodeId,
   });
 
