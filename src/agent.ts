@@ -26,6 +26,7 @@ import {
   EventFromAgent,
   AgentInsightInput,
   AgentInsight,
+  AgentDecisionInput,
 } from './types';
 import { toolPolicy } from './policies/toolPolicy';
 import { isActorRef, isMachineActor, randomId } from './utils';
@@ -357,10 +358,20 @@ export class Agent<
     return this.getSnapshot().context.insights;
   }
 
-  public addDecision(decision: AgentDecision<this>) {
+  public addDecision(input: AgentDecisionInput<this>) {
     this.send({
       type: 'agent.decision',
-      decision,
+      decision: {
+        id: input.id ?? randomId(),
+        episodeId: input.episodeId ?? this.episodeId,
+        timestamp: input.timestamp ?? Date.now(),
+        decisionId: input.decisionId ?? null,
+        policy: input.policy ?? null,
+        goalState: input.goalState ?? null,
+        nextEvent: input.nextEvent ?? null,
+        paths: input.paths ?? [],
+        ...input,
+      },
     });
   }
   /**
@@ -596,7 +607,7 @@ export class Agent<
 
     let attempts = 0;
 
-    let decision: AgentDecision<any> | undefined;
+    let decision: AgentDecision<this> | undefined;
 
     const minimalState = {
       value: state.value,

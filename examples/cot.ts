@@ -18,8 +18,6 @@ const agent = createAgent({
   policy: chainOfThoughtPolicy,
 });
 
-// agent.onMessage((msg) => console.log(msg.content));
-
 async function main() {
   const msg = await getFromTerminal('what?');
 

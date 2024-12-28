@@ -1,18 +1,34 @@
-import { AnyActor, AnyMachineSnapshot, fromPromise } from 'xstate';
+import {
+  AnyActor,
+  AnyMachineSnapshot,
+  fromPromise,
+  PromiseActorLogic,
+} from 'xstate';
 import {
   AnyAgent,
-  AgentDecisionLogic,
   AgentDecideInput,
   TransitionData,
+  AgentDecision,
 } from './types';
 import { getTransitions } from './utils';
-import { CoreTool, tool } from 'ai';
+import { CoreTool, generateText, LanguageModel, tool } from 'ai';
 import { ZodEventMapping } from './schemas';
+
+export type AgentDecideLogicInput = {
+  goal: string;
+  model?: LanguageModel;
+  context?: Record<string, any>;
+} & Omit<Parameters<typeof generateText>[0], 'model' | 'tools' | 'prompt'>;
+
+export type MachineDecisionLogic<TAgent extends AnyAgent> = PromiseActorLogic<
+  AgentDecision<TAgent> | undefined,
+  AgentDecideLogicInput | string
+>;
 
 export function fromDecision<TAgent extends AnyAgent>(
   agent: TAgent,
   defaultInput?: AgentDecideInput<TAgent>
-): AgentDecisionLogic<any> {
+): MachineDecisionLogic<any> {
   return fromPromise(async ({ input, self }) => {
     const parentRef = self._parent;
     if (!parentRef) {
@@ -29,6 +45,7 @@ export function fromDecision<TAgent extends AnyAgent>(
     const decision = await agent.decide({
       machine: (parentRef as AnyActor).logic,
       state: snapshot,
+      allowedEvents: resolvedInput.allowedEvents as any[],
       ...resolvedInput,
       // @ts-ignore
       messages: resolvedInput.messages,
@@ -39,7 +56,7 @@ export function fromDecision<TAgent extends AnyAgent>(
     }
 
     return decision;
-  }) as AgentDecisionLogic<any>;
+  }) as MachineDecisionLogic<any>;
 }
 
 export function getToolMap<TAgent extends AnyAgent>(

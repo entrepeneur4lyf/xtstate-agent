@@ -2,7 +2,6 @@ import { generateObject } from 'ai';
 import {
   AgentDecision,
   AgentDecideInput,
-  AgentPolicy,
   AgentStep,
   AnyAgent,
   CostFunction,
@@ -171,8 +170,8 @@ Examples:
     policy: 'shortestPath',
     episodeId: agent.episodeId,
     goal: input.goal,
-    goalState: paths[0]?.state,
-    nextEvent: nextStep?.event,
+    goalState: paths[0]?.state ?? null,
+    nextEvent: nextStep?.event ?? null,
     paths,
     timestamp: Date.now(),
   };

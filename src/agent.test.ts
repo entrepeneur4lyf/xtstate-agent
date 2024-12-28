@@ -464,14 +464,14 @@ test('agent.getDecisions() returns decisions from context', () => {
         episodeId: agent.episodeId,
         policy: 'test-policy',
         goal: '',
-        goalState: undefined,
+        goalState: null,
         paths: [
           {
-            state: undefined,
+            state: null,
             steps: [],
           },
         ],
-        nextEvent: undefined,
+        nextEvent: null,
         timestamp: Date.now(),
       };
     },

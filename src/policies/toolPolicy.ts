@@ -89,14 +89,14 @@ export async function toolPolicy<TAgent extends AnyAgent>(
     timestamp: Date.now(),
     paths: [
       {
-        state: undefined,
+        state: null,
         steps: [
           {
             event: nextEvent,
             state:
               machine && machineState
                 ? transition(machine, machineState, nextEvent)[0]
-                : undefined,
+                : null,
           },
         ],
       },

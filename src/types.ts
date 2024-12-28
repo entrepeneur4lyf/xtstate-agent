@@ -91,25 +91,34 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    */
   insights?: AgentInsight[];
   toolChoice?: 'auto' | 'none' | 'required';
-} & CommonInput;
+} & BaseInput;
 
 export type AgentStep<TAgent extends AnyAgent> = {
   /** The event to take */
   event: EventFromAgent<TAgent>;
   /** The next expected state after taking the event */
-  state: ObservedState<TAgent> | undefined;
+  state: ObservedState<TAgent> | null;
 };
 
 export type AgentPath<TAgent extends AnyAgent> = {
   /** The expected ending state of the path */
-  state: ObservedState<TAgent> | undefined;
+  state: ObservedState<TAgent> | null;
   /** The steps to reach the ending state */
   steps: Array<AgentStep<TAgent>>;
   weight?: number;
 };
 
-export type AgentDecision<TAgent extends AnyAgent = AnyAgent> = {
-  id: string;
+export interface AgentDecisionInput<TAgent extends AnyAgent> extends BaseInput {
+  goal: string;
+  decisionId?: string | null;
+  policy?: string | null;
+  goalState?: ObservedState<TAgent> | null;
+  nextEvent?: EventFromAgent<TAgent> | null;
+  paths?: AgentPath<TAgent>[];
+}
+
+export interface AgentDecision<TAgent extends AnyAgent = AnyAgent>
+  extends BaseProperties {
   /**
    * The parent decision that this decision is a part of.
    */
@@ -117,26 +126,23 @@ export type AgentDecision<TAgent extends AnyAgent = AnyAgent> = {
   /**
    * The policy used to generate the decision
    */
-  policy: string;
+  policy: string | null;
   goal: string;
   /**
    * The ending state of the decision.
    */
-  goalState: ObservedState<TAgent> | undefined;
+  goalState: ObservedState<TAgent> | null;
   /**
    * The next event that the agent decided needs to occur to achieve the `goal`.
    *
    * This next event is chosen from the
    */
-  nextEvent: EventFromAgent<TAgent> | undefined;
+  nextEvent: EventFromAgent<TAgent> | null;
   /**
    * The paths that the agent can take to achieve the goal.
    */
   paths: AgentPath<TAgent>[];
-  episodeId: string;
-  timestamp: number;
-  // result: GenerateObjectResult<any>;
-};
+}
 
 export interface TransitionData {
   eventType: string;
@@ -170,7 +176,7 @@ export type PromptTemplate<TAgent extends AnyAgent> = (data: {
   decisions?: AgentDecision<TAgent>[];
 }) => string;
 
-export type AgentPolicy<TAgent extends AnyAgent> = (
+export type AgentPolicy<TAgent extends AnyAgent = AnyAgent> = (
   agent: TAgent,
   input: AgentDecideInput<TAgent>
 ) => Promise<AgentDecision<TAgent> | undefined>;
@@ -182,22 +188,22 @@ export type AgentInteractInput<T extends AnyAgent> = Omit<
   state?: never;
 };
 
-export interface AgentFeedback {
+export interface AgentFeedback extends BaseProperties {
   decisionId: string;
-  id: string;
   reward: number;
   comment: string | undefined;
   attributes: Record<string, any>;
-  timestamp: number;
-  episodeId: string;
 }
 
-export interface CommonInput {
-  timestamp?: number;
-  episodeId?: string;
-  id?: string;
+interface BaseProperties {
+  id: string;
+  episodeId: string;
+  timestamp: number;
 }
-export interface AgentFeedbackInput extends CommonInput {
+
+type BaseInput = Partial<BaseProperties>;
+
+export interface AgentFeedbackInput extends BaseInput {
   /**
    * The decision ID that this feedback is relevant for.
    */
@@ -207,21 +213,19 @@ export interface AgentFeedbackInput extends CommonInput {
   attributes?: Record<string, any>;
 }
 
-export type AgentMessage = CoreMessage & {
-  id: string;
-  /**
-   * The parent decision that this message is a part of.
-   */
-  decisionId?: string;
-  timestamp: number;
-  /**
-   * The response ID of the message, which references
-   * which message this message is responding to, if any.
-   */
-  responseId?: string;
-  result?: GenerateTextResult<any, any>;
-  episodeId: string;
-};
+export type AgentMessage = BaseProperties &
+  CoreMessage & {
+    /**
+     * The parent decision that this message is a part of.
+     */
+    decisionId?: string;
+    /**
+     * The response ID of the message, which references
+     * which message this message is responding to, if any.
+     */
+    responseId?: string;
+    result?: GenerateTextResult<any, any>;
+  };
 
 type JSONObject = {
   [key: string]: JSONValue;
@@ -296,31 +300,17 @@ export interface AgentObservation<TActor extends ActorRefLike> {
   timestamp: number;
 }
 
-export interface AgentObservationInput<TAgent extends AnyAgent> {
-  id?: string;
-  episodeId?: string;
+export interface AgentObservationInput<TAgent extends AnyAgent>
+  extends BaseInput {
+  state: ObservedState<TAgent>;
   /**
    * The agent decision that the observation is relevant for
    */
   decisionId?: string | undefined;
   prevState?: ObservedState<TAgent>;
   event?: AnyEventObject;
-  state: ObservedState<TAgent>;
-  // machine?: AnyStateMachine;
-  timestamp?: number;
   goal?: string | undefined;
 }
-
-export type AgentDecisionInput = {
-  goal: string;
-  model?: LanguageModel;
-  context?: Record<string, any>;
-} & Omit<Parameters<typeof generateText>[0], 'model' | 'tools' | 'prompt'>;
-
-export type AgentDecisionLogic<TAgent extends AnyAgent> = PromiseActorLogic<
-  AgentDecision<TAgent> | undefined,
-  AgentDecisionInput | string
->;
 
 export type AgentEmitted<TAgent extends AnyAgent> =
   | {
@@ -487,7 +477,7 @@ export interface StorageAdapter<TAgent extends AnyAgent, TQuery> {
   addMessage(messageInput: AgentMessageInput): Promise<AgentMessage>;
   getMessages(queryObject?: TQuery): Promise<AgentMessage[]>;
   addDecision(
-    decisionInput: AgentDecisionInput
+    decisionInput: AgentDecideInput<TAgent>
   ): Promise<AgentDecision<TAgent>>;
   getDecisions(queryObject?: TQuery): Promise<AgentDecision<TAgent>[]>;
 }
@@ -495,18 +485,12 @@ export interface StorageAdapter<TAgent extends AnyAgent, TQuery> {
 export type StorageAdapterQuery<T extends StorageAdapter<any, any>> =
   T extends StorageAdapter<infer _, infer TQuery> ? TQuery : never;
 
-export type AgentInsightInput = {
-  id?: string;
+export interface AgentInsightInput extends BaseInput {
   observationId: string;
-  episodeId?: string;
-  timestamp?: number;
   attributes: Record<string, any>;
-};
+}
 
-export interface AgentInsight {
-  id: string;
-  episodeId: string;
+export interface AgentInsight extends BaseProperties {
   observationId: string;
-  timestamp: number;
   attributes: Record<string, any>;
 }
