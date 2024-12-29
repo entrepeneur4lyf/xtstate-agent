@@ -63,7 +63,7 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
   machine?: AnyStateMachine;
 
   /**
-   * The total cost of the path to the goal state.
+   * A function that calculates the total cost of the path to the goal state.
    */
   costFunction?: CostFunction<TAgent>;
 
@@ -72,6 +72,9 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    * Defaults to 2.
    */
   maxAttempts?: number;
+  /**
+   * The policy to use for making a decision.
+   */
   policy?: AgentPolicy<TAgent>;
   model?: LanguageModel;
   /**
@@ -168,12 +171,25 @@ export type PromptTemplate<TAgent extends AnyAgent> = (data: {
    */
   transitions?: TransitionData[];
   /**
-   * Past observations
+   * Relevant past observations
    */
   observations?: AgentObservation<any>[]; // TODO
+  /**
+   * Relevant feedback
+   */
   feedback?: AgentFeedback[];
+  /**
+   * Relevant messages
+   */
   messages?: AgentMessage[];
+  /**
+   * Relevant past decisions
+   */
   decisions?: AgentDecision<TAgent>[];
+  /**
+   * Relevant past insights
+   */
+  insights?: AgentInsight[];
 }) => string;
 
 export type AgentPolicy<TAgent extends AnyAgent = AnyAgent> = (
