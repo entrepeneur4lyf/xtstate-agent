@@ -35,7 +35,7 @@
     "@langchain/core": "^0.1.63",
     "@langchain/openai": "^0.0.28",
     "@tavily/core": "^0.0.2",
-    "@types/node": "^20.17.13",
+    "@types/node": "^20.17.14",
     "@types/object-hash": "^3.0.6",
     "@vitest/coverage-v8": "^2.1.8",
     "dotenv": "^16.4.7",
@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@xstate/graph": "^2.0.1",
-    "ai": "^4.0.38",
+    "ai": "^4.1.0",
     "ajv": "^8.17.1",
     "object-hash": "^3.0.0",
     "xstate": "^5.19.2",

@@ -27,9 +27,9 @@ const db = {
   insights: [] as AgentInsight[],
 };
 
-async function postObservation(req: unknown) {
-  db.observations.push(req.body);
-}
+// async function postObservation(req: unknown) {
+//   db.observations.push(req.body);
+// }
 
 async function getDecision(req: {
   query: {
