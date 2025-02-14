@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createAgent, fromDecision, TypesFromAgent } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { assign, createActor, log, setup } from 'xstate';
-import { fromTerminal } from './helpers/helpers';
+import { fromTerminal, getFromTerminal } from './helpers/helpers';
 
 const agent = createAgent({
   id: 'chatbot',
@@ -60,7 +60,11 @@ const machine = setup({
 
 const actor = createActor(machine).start();
 
-agent.interact(actor, () => ({
-  goal: 'Respond to the user, unless they want to end the conversation.',
-  messages: agent.getMessages(),
-}));
+agent.interact(actor, (s) => {
+  if (s.state.matches('responding')) {
+    return {
+      goal: 'Respond to the user, unless they want to end the conversation.',
+      messages: agent.getMessages(),
+    };
+  }
+});

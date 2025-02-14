@@ -211,7 +211,7 @@ test.each([
           ? params.mode.tools?.map((t) => t.name)
           : [];
 
-      console.log('try', attempts, 'max', maxAttempts);
+      // console.log('try', attempts, 'max', maxAttempts);
 
       const toolCalls =
         succeed && attempts++ === (maxAttempts ?? 2) - 1
