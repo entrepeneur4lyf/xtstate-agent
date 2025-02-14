@@ -52,11 +52,13 @@
   },
   "dependencies": {
     "@xstate/graph": "^2.0.1",
-    "ai": "^4.1.36",
     "ajv": "^8.17.1",
     "object-hash": "^3.0.0",
     "xstate": "^5.19.2",
     "zod-to-json-schema": "^3.24.1"
+  },
+  "peerDependencies": {
+    "ai": "^4.1.36"
   },
   "packageManager": "pnpm@8.11.0"
 }
