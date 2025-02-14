@@ -8,7 +8,7 @@ import { assign, createActor, fromPromise, setup } from 'xstate';
 import { createAgent } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { generateObject, generateText } from 'ai';
+import { generateObject } from 'ai';
 
 interface AgentState {
   topic: string;

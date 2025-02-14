@@ -1,5 +1,17 @@
 # @statelyai/agent
 
+## 2.0.0-next.5
+
+### Major Changes
+
+- [`2abec3e`](https://github.com/statelyai/agent/commit/2abec3e4d13d75f0ae1840f6dd2812f8fe9fb8d1) Thanks [@davidkpiano](https://github.com/davidkpiano)! - "Strategy" has been renamed to "policy", and "score" has been renamed to "reward".
+
+- [`56ebde3`](https://github.com/statelyai/agent/commit/56ebde34ef7c897c1b845f026a5b38f41ef6a36f) Thanks [@davidkpiano](https://github.com/davidkpiano)! - Set ai as peer dependency
+
+### Minor Changes
+
+- [`ea0c45e`](https://github.com/statelyai/agent/commit/ea0c45e5f099ea270a8ebd49fc3f700cc5827320) Thanks [@davidkpiano](https://github.com/davidkpiano)! - You can now add **insights** for observations made. Insights are additional context about the observations made, which can be useful for agent decision making.
+
 ## 2.0.0-next.4
 
 ### Major Changes

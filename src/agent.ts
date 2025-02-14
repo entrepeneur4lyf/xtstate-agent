@@ -32,7 +32,7 @@ import { toolPolicy } from './policies/toolPolicy';
 import { isActorRef, isMachineActor, randomId } from './utils';
 import {
   CoreMessage,
-  experimental_wrapLanguageModel,
+  wrapLanguageModel,
   LanguageModel,
   LanguageModelV1,
 } from 'ai';
@@ -262,9 +262,9 @@ export class Agent<
   }
 
   /**
-   * Retrieves messages from the agent's short-term (local) memory.
+   * Adds a message to the agent's short-term (local) memory.
    */
-  public addMessage(messageInput: AgentMessageInput) {
+  public addMessage(messageInput: AgentMessageInput): AgentMessage {
     const message = {
       ...messageInput,
       id: messageInput.id ?? randomId(),
@@ -565,7 +565,7 @@ export class Agent<
   }
 
   public wrap(modelToWrap: LanguageModelV1) {
-    return experimental_wrapLanguageModel({
+    return wrapLanguageModel({
       model: modelToWrap,
       middleware: createAgentMiddleware(this),
     });

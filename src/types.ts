@@ -4,7 +4,6 @@ import {
   AnyEventObject,
   AnyStateMachine,
   EventFrom,
-  PromiseActorLogic,
   SnapshotFrom,
   StateValue,
   TransitionSnapshot,
