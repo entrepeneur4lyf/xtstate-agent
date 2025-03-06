@@ -30,7 +30,7 @@ const machine = setup({
     },
     events: {} as EventFromExpert<typeof expert>,
   },
-  actors: { agent: fromDecision(expert), getFromTerminal: fromTerminal },
+  actors: { expert: fromDecision(expert), getFromTerminal: fromTerminal },
 }).createMachine({
   initial: 'human',
   context: {
@@ -55,7 +55,7 @@ const machine = setup({
       states: {
         teaching: {
           invoke: {
-            src: 'agent',
+            src: 'expert',
             input: ({ context }) => ({
               context,
               goal: 'Give brief feedback to the human based on the most recent response of the conversation',
@@ -71,7 +71,7 @@ const machine = setup({
         },
         responding: {
           invoke: {
-            src: 'agent',
+            src: 'expert',
             input: ({ context }) => ({
               context,
               goal: 'Respond to the last message of the conversation in Spanish',

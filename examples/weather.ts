@@ -81,7 +81,7 @@ const machine = setup({
     events: {} as EventFromExpert<typeof expert>,
   },
   actors: {
-    agent: fromDecision(expert),
+    expert: fromDecision(expert),
     getWeather,
     getFromTerminal: fromTerminal,
   },

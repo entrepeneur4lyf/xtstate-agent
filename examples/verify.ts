@@ -13,7 +13,7 @@ const expert = createExpert({
       feedback: z.string(),
     }),
     'expert.answerQuestion': z.object({
-      answer: z.string().describe('The answer from the agent'),
+      answer: z.string().describe('The answer from the expert'),
     }),
     'expert.validateQuestion': z.object({
       isValid: z
@@ -39,7 +39,7 @@ const machine = setup({
   },
   actors: {
     getFromTerminal: fromTerminal,
-    agent: fromDecision(expert),
+    expert: fromDecision(expert),
   },
 }).createMachine({
   initial: 'askQuestion',
@@ -59,7 +59,7 @@ const machine = setup({
     },
     validateQuestion: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           goal: `Validate this question: ${context.question!}`,
         }),
@@ -79,7 +79,7 @@ const machine = setup({
     },
     answerQuestion: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           goal: `Answer this question: ${context.question}`,
         }),
@@ -95,7 +95,7 @@ const machine = setup({
     },
     validateAnswer: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           goal: `Validate if this is a good answer to the question: ${context.question}\nAnswer provided: ${context.answer}`,
         }),

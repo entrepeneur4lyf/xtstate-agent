@@ -4,11 +4,11 @@ import { z } from 'zod';
 import { createActor, log, setup } from 'xstate';
 
 const expert = createExpert({
-  id: 'support-agent',
+  id: 'support-expert',
   model: openai('gpt-4o-mini'),
   events: {
     'expert.respond': z.object({
-      response: z.string().describe('The response from the agent'),
+      response: z.string().describe('The response from the expert'),
     }),
     'expert.frontline.classify': z.object({
       category: z
@@ -17,19 +17,19 @@ const expert = createExpert({
     }),
     'expert.refund': z
       .object({
-        response: z.string().describe('The response from the agent'),
+        response: z.string().describe('The response from the expert'),
       })
-      .describe('The agent wants to refund the user'),
+      .describe('The expert wants to refund the user'),
     'expert.technical.solve': z.object({
       solution: z
         .string()
-        .describe('The solution provided by the technical agent'),
+        .describe('The solution provided by the technical expert'),
     }),
     'expert.endConversation': z
       .object({
-        response: z.string().describe('The response from the agent'),
+        response: z.string().describe('The response from the expert'),
       })
-      .describe('The agent ends the conversation'),
+      .describe('The expert ends the conversation'),
   },
 });
 
@@ -41,7 +41,7 @@ const machine = setup({
       customerIssue: string;
     },
   },
-  actors: { agent: fromDecision(expert) },
+  actors: { expert: fromDecision(expert) },
 }).createMachine({
   initial: 'frontline',
   context: ({ input }) => ({
@@ -140,8 +140,8 @@ expert.interact(actor, ({ state }) => {
 
   if (state.matches('conversational')) {
     return {
-      goal: 'You are a customer support agent that is ending the conversation with the customer. Respond politely and thank them for their time.',
-      system: `You are a customer support agent that is ending the conversation with the customer. Respond politely and thank them for their time.`,
+      goal: 'You are a customer support expert that is ending the conversation with the customer. Respond politely and thank them for their time.',
+      system: `You are a customer support expert that is ending the conversation with the customer. Respond politely and thank them for their time.`,
     };
   }
 });

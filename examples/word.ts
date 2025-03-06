@@ -31,7 +31,7 @@ const expert = createExpert({
       response: z
         .string()
         .describe(
-          'The response from the agent, detailing why the guess was correct or incorrect based on the letters guessed.'
+          'The response from the expert, detailing why the guess was correct or incorrect based on the letters guessed.'
         ),
     }),
   },
@@ -46,7 +46,7 @@ const context = {
 const wordGuesserMachine = setup({
   types: {} as TypesFromExpert<typeof expert>,
   actors: {
-    agent: fromDecision(expert),
+    expert: fromDecision(expert),
     getFromTerminal: fromTerminal,
   },
   actions: {
@@ -60,7 +60,7 @@ const wordGuesserMachine = setup({
       entry: 'resetContext',
       invoke: {
         src: 'getFromTerminal',
-        input: 'Enter a word, and an agent will try to guess it.',
+        input: 'Enter a word, and an expert will try to guess it.',
         onDone: {
           actions: assign({
             word: ({ event }) => event.output,
@@ -75,7 +75,7 @@ const wordGuesserMachine = setup({
         target: 'finalGuess',
       },
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           context: {
             wordLength: context.word!.length,
@@ -118,7 +118,7 @@ const wordGuesserMachine = setup({
     },
     finalGuess: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           context: {
             lettersGuessed: context.lettersGuessed,
@@ -147,7 +147,7 @@ const wordGuesserMachine = setup({
     },
     gameOver: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           context,
           goal: `Why do you think you won or lost?`,
@@ -157,9 +157,9 @@ const wordGuesserMachine = setup({
         if (
           context.guessedWord?.toUpperCase() === context.word?.toUpperCase()
         ) {
-          return 'The agent won!';
+          return 'The expert won!';
         } else {
-          return 'The agent lost! The word was ' + context.word;
+          return 'The expert lost! The word was ' + context.word;
         }
       }),
       on: {

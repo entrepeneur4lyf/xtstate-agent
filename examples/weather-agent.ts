@@ -5,9 +5,9 @@ import { assign, createActor, fromPromise, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 import { openai } from '@ai-sdk/openai';
 
-// Create the weather agent
+// Create the weather expert
 const expert = createExpert({
-  id: 'weather-agent',
+  id: 'weather-expert',
   model: openai('gpt-4o'),
   events: {
     'weather.check': z.object({

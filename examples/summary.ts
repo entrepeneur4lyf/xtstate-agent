@@ -9,7 +9,7 @@ const expert = createExpert({
   model: openai('gpt-4o'),
   events: {
     'expert.respond': z.object({
-      response: z.string().describe('The response from the agent'),
+      response: z.string().describe('The response from the expert'),
     }),
     'expert.summarize': z.object({
       summary: z.string().describe('Summary of the conversation history'),
@@ -29,7 +29,7 @@ const expert = createExpert({
 const machine = setup({
   types: {} as TypesFromExpert<typeof expert>,
   actors: {
-    agent: fromDecision(expert),
+    expert: fromDecision(expert),
     fromTerminal,
   },
 }).createMachine({
@@ -60,7 +60,7 @@ const machine = setup({
         target: 'summarizing',
       },
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           goal: 'Respond to the user message',
           context: {
@@ -83,7 +83,7 @@ const machine = setup({
     },
     summarizing: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           goal: 'Create a concise summary of the conversation history',
           context: {

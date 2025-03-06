@@ -24,7 +24,7 @@ const machine = setup({
     events: {} as EventFromExpert<typeof expert>,
   },
   actors: {
-    agent: fromDecision(expert),
+    expert: fromDecision(expert),
     getFromTerminal: fromTerminal,
   },
 }).createMachine({
@@ -53,7 +53,7 @@ const machine = setup({
         target: 'winner',
       },
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           goal: `
           Guess the number between 1 and 10. The previous guesses were ${

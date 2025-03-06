@@ -83,7 +83,7 @@ const expert = createExpert({
 const jokeMachine = setup({
   types: {} as TypesFromExpert<typeof expert>,
   actors: {
-    agent: fromDecision(expert),
+    expert: fromDecision(expert),
     loader,
     getFromTerminal: fromTerminal,
   },

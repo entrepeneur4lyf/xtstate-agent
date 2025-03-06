@@ -12,7 +12,7 @@ const expert = createExpert({
       goal: z.string().describe('The goal for the conversation'),
     }),
     'expert.respond': z.object({
-      response: z.string().describe('The response from the agent'),
+      response: z.string().describe('The response from the expert'),
     }),
   },
 });

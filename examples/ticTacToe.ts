@@ -11,7 +11,7 @@ import { generateObject, generateText } from 'ai';
 import * as fs from 'fs';
 
 const events = {
-  'agent.x.play': z.object({
+  'expert.x.play': z.object({
     reasoning: z.string().describe('The reasoning for the move'),
     index: z
       .number()
@@ -19,7 +19,7 @@ const events = {
       .max(8)
       .describe('The index of the cell for xto play on'),
   }),
-  'agent.o.play': z.object({
+  'expert.o.play': z.object({
     reasoning: z.string().describe('The reasoning for the move'),
     index: z
       .number()
@@ -103,7 +103,7 @@ export const ticTacToeMachine = setup({
   actions: {
     updateBoard: assign({
       board: ({ context, event }) => {
-        assertEvent(event, ['agent.x.play', 'agent.o.play']);
+        assertEvent(event, ['expert.x.play', 'expert.o.play']);
         const updatedBoard = [...context.board];
         updatedBoard[event.index] = context.player;
         return updatedBoard;
@@ -140,7 +140,7 @@ export const ticTacToeMachine = setup({
     },
     isValidMove: ({ context, event }) => {
       try {
-        assertEvent(event, ['agent.o.play', 'agent.x.play']);
+        assertEvent(event, ['expert.o.play', 'expert.x.play']);
       } catch {
         return false;
       }
@@ -162,7 +162,7 @@ export const ticTacToeMachine = setup({
         x: {
           entry: 'printBoard',
           on: {
-            'agent.x.play': [
+            'expert.x.play': [
               {
                 target: 'o',
                 guard: 'isValidMove',
@@ -180,7 +180,7 @@ export const ticTacToeMachine = setup({
         o: {
           entry: 'printBoard',
           on: {
-            'agent.o.play': [
+            'expert.o.play': [
               {
                 target: 'x',
                 guard: 'isValidMove',

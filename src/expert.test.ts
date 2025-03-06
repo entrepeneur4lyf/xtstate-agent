@@ -4,13 +4,13 @@ import {
   ExpertFeedbackInput,
   createExpert,
   TypesFromExpert,
-} from './';
+} from '.';
 import { createActor, createMachine } from 'xstate';
 import { LanguageModelV1CallOptions } from 'ai';
 import { z } from 'zod';
 import { dummyResponseValues, MockLanguageModelV1 } from './mockModel';
 
-test('an agent has the expected interface', () => {
+test('an expert has the expected interface', () => {
   const expert = createExpert({
     id: 'test',
     events: {},

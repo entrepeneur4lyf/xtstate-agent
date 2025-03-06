@@ -9,7 +9,9 @@ const expert = createExpert({
   model: openai('gpt-4o-mini'),
   events: {
     askForClarification: z.object({
-      questions: z.array(z.string()).describe('The questions to ask the agent'),
+      questions: z
+        .array(z.string())
+        .describe('The questions to ask the expert'),
     }),
     submitEmail: z.object({
       email: z.string().describe('The email to submit'),

@@ -21,12 +21,7 @@ import {
 } from 'xstate';
 
 /**
- * Gets an array of messages from the given prompt, based on the agent and options.
- *
- * @param agent
- * @param prompt
- * @param options
- * @returns
+ * Gets an array of messages from the given prompt and messages
  */
 export function combinePromptAndMessages(
   prompt: string,

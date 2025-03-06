@@ -40,7 +40,7 @@ const machine = setup({
       | EventFromExpert<typeof expert>
       | { type: 'assist'; command: string },
   },
-  actors: { agent: fromDecision(expert), getFromTerminal: fromTerminal },
+  actors: { expert: fromDecision(expert), getFromTerminal: fromTerminal },
 }).createMachine({
   context: {
     command: null,
@@ -117,7 +117,7 @@ const machine = setup({
     },
     assisting: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           context: {
             command: context.command,

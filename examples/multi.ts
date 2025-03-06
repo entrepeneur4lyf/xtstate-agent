@@ -9,7 +9,7 @@ const expert = createExpert({
   model: openai('gpt-4o-mini'),
   events: {
     'expert.respond': z.object({
-      response: z.string().describe('The response from the agent'),
+      response: z.string().describe('The response from the expert'),
     }),
   },
 });
@@ -23,7 +23,7 @@ const machine = setup({
   },
   actors: {
     getFromTerminal: fromTerminal,
-    agent: fromDecision(expert),
+    expert: fromDecision(expert),
   },
 }).createMachine({
   initial: 'asking',
@@ -46,7 +46,7 @@ const machine = setup({
     },
     positiveResponse: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           context,
           goal: 'Debate the topic, and take the positive position. Respond directly to the last message of the discourse. Keep it short.',
@@ -67,7 +67,7 @@ const machine = setup({
     },
     negativeResponse: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           model: openai('gpt-4-turbo'),
           context,

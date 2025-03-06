@@ -3,7 +3,7 @@ import { assign, createActor, setup } from 'xstate';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 
-// Create customer service agent
+// Create customer service expert
 const customerServiceAgent = createExpert({
   id: 'customer-service',
   model: openai('gpt-4o'),
@@ -11,13 +11,13 @@ const customerServiceAgent = createExpert({
     'expert.respond': z.object({
       response: z
         .string()
-        .describe('The response from the customer service agent'),
+        .describe('The response from the customer service expert'),
     }),
   },
-  description: 'You are a customer service agent for an airline.',
+  description: 'You are a customer service expert for an airline.',
 });
 
-// Create simulated customer agent
+// Create simulated customer expert
 const customerAgent = createExpert({
   id: 'customer',
   model: openai('gpt-4o-mini'),
@@ -75,7 +75,7 @@ const machine = setup({
       invoke: {
         src: 'customer',
         input: ({ context }) => ({
-          goal: 'Respond to the customer service agent, or finish the conversation if you have nothing more to add.',
+          goal: 'Respond to the customer service expert, or finish the conversation if you have nothing more to add.',
           context,
         }),
       },

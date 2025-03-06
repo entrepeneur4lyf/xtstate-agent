@@ -29,7 +29,7 @@ const machine = setup({
     },
     events: {} as EventFromExpert<typeof expert>,
   },
-  actors: { agent: fromDecision(expert), getFromTerminal: fromTerminal },
+  actors: { expert: fromDecision(expert), getFromTerminal: fromTerminal },
 }).createMachine({
   context: {
     lastInput: null,
@@ -54,7 +54,7 @@ const machine = setup({
     },
     determining: {
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           context,
           goal: 'If the last input explicitly says to end the drawing and/or choose a winner, start the drawing process. Otherwise, get more entries.',
@@ -74,7 +74,7 @@ const machine = setup({
     drawing: {
       entry: log('And the winner is...'),
       invoke: {
-        src: 'agent',
+        src: 'expert',
         input: ({ context }) => ({
           context,
           goal: 'Choose the technology that sounds most exciting to you from the entries. Be as unbiased as possible in your choice. Explain why you chose the winning entry.',

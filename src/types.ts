@@ -18,7 +18,7 @@ import {
 } from 'ai';
 import { ZodContextMapping, ZodEventMapping } from './schemas';
 import { TypeOf } from 'zod';
-import { Expert } from './agent';
+import { Expert } from './expert';
 
 export type GenerateTextOptions = Parameters<typeof generateText>[0];
 
@@ -45,18 +45,18 @@ export type ExpertDecideInput<TExpert extends AnyExpert> = Omit<
    */
   context?: Record<string, any>;
   /**
-   * The goal for the agent to accomplish.
-   * The agent will make a decision based on this goal.
+   * The goal for the expert to accomplish.
+   * The expert will make a decision based on this goal.
    */
   goal: string;
   /**
-   * The events that the agent can trigger. This is a mapping of
+   * The events that the expert can trigger. This is a mapping of
    * event types to Zod event schemas.
    */
   events?: ZodEventMapping;
   allowedEvents?: Array<EventFromExpert<TExpert>['type']>;
   /**
-   * The state machine that represents the environment the agent
+   * The state machine that represents the environment the expert
    * is interacting with.
    */
   machine?: AnyStateMachine;
@@ -136,13 +136,13 @@ export interface ExpertDecision<TExpert extends AnyExpert = AnyExpert>
    */
   goalState: ObservedState<TExpert> | null;
   /**
-   * The next event that the agent decided needs to occur to achieve the `goal`.
+   * The next event that the expert decided needs to occur to achieve the `goal`.
    *
    * This next event is chosen from the
    */
   nextEvent: EventFromExpert<TExpert> | null;
   /**
-   * The paths that the agent can take to achieve the goal.
+   * The paths that the expert can take to achieve the goal.
    */
   paths: ExpertPath<TExpert>[];
 }
@@ -193,7 +193,7 @@ export type PromptTemplate<TExpert extends AnyExpert> = (data: {
 }) => string;
 
 export type ExpertPolicy<TExpert extends AnyExpert = AnyExpert> = (
-  agent: TExpert,
+  expert: TExpert,
   input: ExpertDecideInput<TExpert>
 ) => Promise<ExpertDecision<TExpert> | undefined>;
 
@@ -320,7 +320,7 @@ export interface ExpertObservationInput<TExpert extends AnyExpert>
   extends BaseInput {
   state: ObservedState<TExpert>;
   /**
-   * The agent decision that the observation is relevant for
+   * The expert decision that the observation is relevant for
    */
   decisionId?: string | undefined;
   prevState?: ObservedState<TExpert>;
@@ -394,7 +394,7 @@ export type ContextFromZodContextMapping<
 
 export type AnyExpert = Expert<any, any>;
 
-export type FromExpert<T> = T | ((agent: AnyExpert) => T | Promise<T>);
+export type FromExpert<T> = T | ((expert: AnyExpert) => T | Promise<T>);
 
 export type CommonTextOptions = {
   prompt: FromExpert<string>;

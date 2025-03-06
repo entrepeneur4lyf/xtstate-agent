@@ -114,7 +114,7 @@ export function createExpert<
   /**
    * The unique identifier for the expert.
    *
-   * This should be the same across all episodes of a specific agent, as it can be
+   * This should be the same across all episodes of a specific expert, as it can be
    * used to retrieve memory for previous episodes of this expert.
    *
    * @example
@@ -131,32 +131,32 @@ export function createExpert<
    */
   description?: string;
   /**
-   * Event schemas for events that the agent can trigger in an environment.
+   * Event schemas for events that the expert can trigger in an environment.
    */
   events: TEventSchemas;
   /**
-   * The state context schema for the states that the agent can observe.
+   * The state context schema for the states that the expert can observe.
    */
   context?: TContextSchema;
   /**
    * The default policy to use for `expert.decide(…)`.
    *
-   * A policy is a strategy that the agent uses to decide which event to trigger next.
+   * A policy is a strategy that the expert uses to decide which event to trigger next.
    */
   policy?: ExpertPolicy<Expert<TContextSchema, TEventSchemas>>;
   /**
-   * Custom agent logic, which receives events for handling feedback,
+   * Custom expert logic, which receives events for handling feedback,
    * observations, messages, decisions, and insights.
    */
   logic?: ExpertLogic<TExpert>;
   /**
-   * The default language model for the agent to use in `expert.decide(…)`.
+   * The default language model for the expert to use in `expert.decide(…)`.
    */
   model: LanguageModel;
   /**
-   * The unique episode ID that this agent will run on.
+   * The unique episode ID that this expert will run on.
    *
-   * An episode is an instance of an agent interacting with an environment.
+   * An episode is an instance of an expert interacting with an environment.
    */
   episodeId?: string;
 }): Expert<TContextSchema, TEventSchemas> {
@@ -177,7 +177,7 @@ export class Expert<
   const TEventSchemas extends ZodEventMapping
 > extends Actor<ExpertLogic<any>> {
   /**
-   * The name of the expert. All agents with the same name are related and
+   * The name of the expert. All experts with the same name are related and
    * able to share experiences (observations, feedback) with each other.
    */
   public name?: string;
@@ -226,35 +226,35 @@ export class Expert<
   }
 
   /**
-   * Called whenever the agent detects that a message was sent from the human, assistant, or system.
+   * Called whenever the expert detects that a message was sent from the human, assistant, or system.
    */
   public onMessage(fn: (message: ExpertMessage) => void) {
     return this.on('message', (ev) => fn(ev.message));
   }
 
   /**
-   * Called whenever the agent receives some feedback.
+   * Called whenever the expert receives some feedback.
    */
   public onFeedback(fn: (feedback: ExpertFeedback) => void) {
     return this.on('feedback', (ev) => fn(ev.feedback));
   }
 
   /**
-   * Called whenever the agent receives an observation.
+   * Called whenever the expert receives an observation.
    */
   public onObservation(fn: (observation: ExpertObservation<this>) => void) {
     return this.on('observation', (ev) => fn(ev.observation));
   }
 
   /**
-   * Called whenever the agent makes a decision.
+   * Called whenever the expert makes a decision.
    */
   public onDecision(fn: (decision: ExpertDecision<this>) => void) {
     return this.on('decision', (ev) => fn(ev.decision));
   }
 
   /**
-   * Adds a message to the agent's short-term (local) memory.
+   * Adds a message to the expert's short-term (local) memory.
    */
   public addMessage(messageInput: ExpertMessageInput): ExpertMessage {
     const message = {
@@ -292,7 +292,7 @@ export class Expert<
   }
 
   /**
-   * Retrieves feedback from the agent's short-term (local) memory.
+   * Retrieves feedback from the expert's short-term (local) memory.
    */
   public getFeedback() {
     return this.getSnapshot().context.feedback;
@@ -324,7 +324,7 @@ export class Expert<
   }
 
   /**
-   * Retrieves observations from the agent's short-term (local) memory.
+   * Retrieves observations from the expert's short-term (local) memory.
    */
   public getObservations() {
     return this.getSnapshot().context.observations;
@@ -367,7 +367,7 @@ export class Expert<
     });
   }
   /**
-   * Retrieves strategies from the agent's short-term (local) memory.
+   * Retrieves strategies from the expert's short-term (local) memory.
    */
   public getDecisions() {
     return this.getSnapshot().context.decisions;
@@ -378,7 +378,7 @@ export class Expert<
    *
    * Observations contain the `prevState`, `event`, and current `state` of this
    * actor, as well as other properties that are useful when recalled.
-   * These observations are stored in the `agent`'s short-term (local) memory
+   * These observations are stored in the `expert`'s short-term (local) memory
    * and can be retrieved via `expert.getObservations()`.
    *
    * @example
@@ -394,11 +394,11 @@ export class Expert<
    * Interacts with this state machine actor by:
    * 1. Inspecting state transitions and storing them as observations
    * 2. Deciding what to do next (which event to send the actor) based on
-   * the agent input returned from `getInput(observation)`, if `getInput(…)` is provided as the 2nd argument.
+   * the expert input returned from `getInput(observation)`, if `getInput(…)` is provided as the 2nd argument.
    *
    * Observations contain the `prevState`, `event`, and current `state` of this
    * actor, as well as other properties that are useful when recalled.
-   * These observations are stored in the `agent`'s short-term (local) memory
+   * These observations are stored in the `expert`'s short-term (local) memory
    * and can be retrieved via `expert.getObservations()`.
    *
    * @example
@@ -566,7 +566,7 @@ export class Expert<
   /**
    * Resolves with an `AgentDecision` based on the information provided in the `options`, including:
    *
-   * - The `goal` for the agent to achieve
+   * - The `goal` for the expert to achieve
    * - The observed current `state`
    * - The `machine` (e.g. a state machine) that specifies what can happen next
    * - Additional `context`
