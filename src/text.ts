@@ -6,9 +6,9 @@ import {
   type GenerateTextResult,
 } from 'ai';
 import {
-  AgentGenerateTextOptions,
-  AgentStreamTextOptions,
-  AnyAgent,
+  ExpertGenerateTextOptions,
+  ExpertStreamTextOptions,
+  AnyExpert,
 } from './types';
 import { defaultTextTemplate } from './templates/defaultText';
 import {
@@ -38,12 +38,12 @@ export function combinePromptAndMessages(
   });
 }
 
-export function fromTextStream<TAgent extends AnyAgent>(
-  agent: TAgent,
-  options?: AgentStreamTextOptions
+export function fromTextStream<TExpert extends AnyExpert>(
+  expert: TExpert,
+  options?: ExpertStreamTextOptions
 ): ObservableActorLogic<
   { textDelta: string },
-  Omit<AgentStreamTextOptions, 'context'> & {
+  Omit<ExpertStreamTextOptions, 'context'> & {
     context?: Record<string, any>;
   }
 > {
@@ -54,11 +54,11 @@ export function fromTextStream<TAgent extends AnyAgent>(
     // TODO: check if messages was provided instead
 
     (async () => {
-      const model = input.model ? agent.wrap(input.model) : agent.model;
+      const model = input.model ? expert.wrap(input.model) : expert.model;
       const goal =
         typeof input.prompt === 'string'
           ? input.prompt
-          : await input.prompt(agent);
+          : await input.prompt(expert);
       const promptWithContext = template({
         goal,
         context: input.context,
@@ -99,12 +99,12 @@ export function fromTextStream<TAgent extends AnyAgent>(
   });
 }
 
-export function fromText<TAgent extends AnyAgent>(
-  agent: TAgent,
-  options?: AgentGenerateTextOptions
+export function fromText<TExpert extends AnyExpert>(
+  expert: TExpert,
+  options?: ExpertGenerateTextOptions
 ): PromiseActorLogic<
   GenerateTextResult<Record<string, CoreTool<any, any>>, any>,
-  Omit<AgentGenerateTextOptions, 'context'> & {
+  Omit<ExpertGenerateTextOptions, 'context'> & {
     context?: Record<string, any>;
   }
 > {
@@ -118,7 +118,7 @@ export function fromText<TAgent extends AnyAgent>(
     const goal =
       typeof input.prompt === 'string'
         ? input.prompt
-        : await input.prompt(agent);
+        : await input.prompt(expert);
 
     const promptWithContext = template({
       goal,
@@ -130,7 +130,7 @@ export function fromText<TAgent extends AnyAgent>(
       input.messages
     );
 
-    const model = input.model ? agent.wrap(input.model) : agent.model;
+    const model = input.model ? expert.wrap(input.model) : expert.model;
 
     return await generateText({
       ...input,

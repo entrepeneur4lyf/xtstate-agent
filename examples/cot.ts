@@ -1,14 +1,14 @@
 import { z } from 'zod';
-import { createAgent } from '../src';
+import { createExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { getFromTerminal } from './helpers/helpers';
 import { chainOfThoughtPolicy } from '../src/policies/chainOfThoughtPolicy';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'chain-of-thought',
   model: openai('gpt-4o'),
   events: {
-    'agent.answer': z.object({
+    'expert.answer': z.object({
       answer: z.string().describe('The answer to the question'),
     }),
   },
@@ -21,8 +21,8 @@ const agent = createAgent({
 async function main() {
   const msg = await getFromTerminal('what?');
 
-  const decision = await agent.decide({
-    messages: agent.getMessages(),
+  const decision = await expert.decide({
+    messages: expert.getMessages(),
     goal: 'Answer the question.',
     state: {
       value: 'thinking',

@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { ContextFromAgent, createAgent, EventFromAgent } from '../src';
+import { ContextFromAgent, createExpert, EventFromExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { assign, createActor, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'email',
   model: openai('gpt-4o-mini'),
   events: {
@@ -27,12 +27,12 @@ const agent = createAgent({
 
 const machine = setup({
   types: {
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
     input: {} as {
       email: string;
       instructions: string;
     },
-    context: {} as ContextFromAgent<typeof agent>,
+    context: {} as ContextFromAgent<typeof expert>,
   },
   actors: { getFromTerminal: fromTerminal },
 }).createMachine({
@@ -97,7 +97,7 @@ const actor = createActor(machine, {
   },
 }).start();
 
-agent.interact(actor, ({ state }) => {
+expert.interact(actor, ({ state }) => {
   if (state.matches('checking')) {
     return {
       goal: 'Respond to the email given the instructions and the provided clarifications. If not enough information is provided, ask for clarification. Otherwise, if you are absolutely sure that there is no ambiguous or missing information, create and submit a response email.',

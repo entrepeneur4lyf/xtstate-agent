@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { createAgent } from '../src';
+import { createExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { CoreMessage, generateText, streamText } from 'ai';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'wiki',
   model: openai('gpt-4o-mini'),
   events: {
@@ -16,23 +16,23 @@ const agent = createAgent({
   },
 });
 
-agent.onMessage((msg) => {
+expert.onMessage((msg) => {
   console.log(msg);
 });
 
 async function main() {
   const result = await generateText({
-    model: agent.model,
+    model: expert.model,
     prompt: 'When was Deadpool 2 released?',
   });
 
   for (const msg of await result.response.messages) {
-    agent.addMessage(msg);
+    expert.addMessage(msg);
   }
 
   const response2 = await streamText({
-    model: agent.model,
-    messages: (agent.getMessages() as CoreMessage[]).concat({
+    model: expert.model,
+    messages: (expert.getMessages() as CoreMessage[]).concat({
       role: 'user',
       content: 'What about the first one?',
     }),

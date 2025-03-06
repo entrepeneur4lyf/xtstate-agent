@@ -7,26 +7,25 @@ import {
 } from 'xstate';
 import { ZodContextMapping, ZodEventMapping } from './schemas';
 import {
-  AgentLogic,
-  AgentMessage,
-  AgentPolicy,
+  ExpertLogic,
+  ExpertMessage,
+  ExpertPolicy,
   GenerateTextOptions,
-  AgentLongTermMemory,
   ObservedState,
-  AgentObservationInput,
-  AgentMemoryContext,
-  AgentObservation,
-  AgentFeedback,
-  AgentMessageInput,
-  AgentFeedbackInput,
-  AgentDecision,
-  AnyAgent,
-  AgentInteractInput,
-  AgentDecideInput,
-  EventFromAgent,
-  AgentInsightInput,
-  AgentInsight,
-  AgentDecisionInput,
+  ExpertObservationInput,
+  ExpertMemoryContext,
+  ExpertObservation,
+  ExpertFeedback,
+  ExpertMessageInput,
+  ExpertFeedbackInput,
+  ExpertDecision,
+  AnyExpert,
+  ExpertInteractInput,
+  ExpertDecideInput,
+  EventFromExpert,
+  ExpertInsightInput,
+  ExpertInsight,
+  ExpertDecisionInput,
 } from './types';
 import { toolPolicy } from './policies/toolPolicy';
 import { isActorRef, isMachineActor, randomId } from './utils';
@@ -38,10 +37,10 @@ import {
 } from 'ai';
 import { createAgentMiddleware } from './middleware';
 
-export const agentLogic: AgentLogic<any> = fromTransition(
+export const expertLogic: ExpertLogic<any> = fromTransition(
   (state, event, { emit }) => {
     switch (event.type) {
-      case 'agent.feedback': {
+      case 'expert.feedback': {
         state.feedback.push(event.feedback);
         emit({
           type: 'feedback',
@@ -49,7 +48,7 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         });
         break;
       }
-      case 'agent.observe': {
+      case 'expert.observe': {
         state.observations.push(event.observation);
         emit({
           type: 'observation',
@@ -57,7 +56,7 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         });
         break;
       }
-      case 'agent.message': {
+      case 'expert.message': {
         state.messages.push(event.message);
         emit({
           type: 'message',
@@ -65,7 +64,7 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         });
         break;
       }
-      case 'agent.decision': {
+      case 'expert.decision': {
         state.decisions.push(event.decision);
         emit({
           type: 'decision',
@@ -73,7 +72,7 @@ export const agentLogic: AgentLogic<any> = fromTransition(
         });
         break;
       }
-      case 'agent.insight': {
+      case 'expert.insight': {
         state.insights.push(event.insight);
         emit({
           type: 'insight',
@@ -95,13 +94,13 @@ export const agentLogic: AgentLogic<any> = fromTransition(
       observations: [],
       decisions: [],
       insights: [],
-    } as AgentMemoryContext<any>)
+    } as ExpertMemoryContext<any>)
 );
 
-export function createAgent<
+export function createExpert<
   const TContextSchema extends ZodContextMapping,
   const TEventSchemas extends ZodEventMapping,
-  TAgent extends AnyAgent = Agent<TContextSchema, TEventSchemas>
+  TExpert extends AnyExpert = Expert<TContextSchema, TEventSchemas>
 >({
   id,
   description,
@@ -110,17 +109,17 @@ export function createAgent<
   context,
   episodeId,
   policy = toolPolicy,
-  logic = agentLogic,
+  logic = expertLogic,
 }: {
   /**
-   * The unique identifier for the agent.
+   * The unique identifier for the expert.
    *
    * This should be the same across all episodes of a specific agent, as it can be
-   * used to retrieve memory for previous episodes of this agent.
+   * used to retrieve memory for previous episodes of this expert.
    *
    * @example
    * ```ts
-   * const agent = createAgent({
+   * const expert = createAgent({
    *  id: 'recipe-assistant',
    *  // ...
    * });
@@ -128,7 +127,7 @@ export function createAgent<
    */
   id?: string;
   /**
-   * A description of the role of the agent.
+   * A description of the role of the expert.
    */
   description?: string;
   /**
@@ -140,24 +139,18 @@ export function createAgent<
    */
   context?: TContextSchema;
   /**
-   * The default policy to use for `agent.decide(…)`.
+   * The default policy to use for `expert.decide(…)`.
    *
    * A policy is a strategy that the agent uses to decide which event to trigger next.
    */
-  policy?: AgentPolicy<Agent<TContextSchema, TEventSchemas>>;
-  /**
-   * A function that retrieves the agent's long term memory
-   */
-  getMemory?: (
-    agent: Agent<TContextSchema, TEventSchemas>
-  ) => AgentLongTermMemory<TAgent>;
+  policy?: ExpertPolicy<Expert<TContextSchema, TEventSchemas>>;
   /**
    * Custom agent logic, which receives events for handling feedback,
    * observations, messages, decisions, and insights.
    */
-  logic?: AgentLogic<TAgent>;
+  logic?: ExpertLogic<TExpert>;
   /**
-   * The default language model for the agent to use in `agent.decide(…)`.
+   * The default language model for the agent to use in `expert.decide(…)`.
    */
   model: LanguageModel;
   /**
@@ -166,8 +159,8 @@ export function createAgent<
    * An episode is an instance of an agent interacting with an environment.
    */
   episodeId?: string;
-}): Agent<TContextSchema, TEventSchemas> {
-  return new Agent({
+}): Expert<TContextSchema, TEventSchemas> {
+  return new Expert({
     id,
     context,
     events,
@@ -179,28 +172,27 @@ export function createAgent<
   }) as any;
 }
 
-export class Agent<
+export class Expert<
   const TContextSchema extends ZodContextMapping,
   const TEventSchemas extends ZodEventMapping
-> extends Actor<AgentLogic<any>> {
+> extends Actor<ExpertLogic<any>> {
   /**
-   * The name of the agent. All agents with the same name are related and
+   * The name of the expert. All agents with the same name are related and
    * able to share experiences (observations, feedback) with each other.
    */
   public name?: string;
   /**
-   * The unique identifier for the agent.
+   * The unique identifier for the expert.
    */
   public episodeId: string;
   public description?: string;
   public events: TEventSchemas;
   public context?: TContextSchema;
-  public policy: AgentPolicy<Agent<TContextSchema, TEventSchemas>>;
+  public policy: ExpertPolicy<Expert<TContextSchema, TEventSchemas>>;
   public model: LanguageModel;
-  public memory: AgentLongTermMemory<this> | undefined;
 
   constructor({
-    logic = agentLogic as AgentLogic<any>,
+    logic = expertLogic as ExpertLogic<any>,
     id,
     name,
     description,
@@ -210,14 +202,14 @@ export class Agent<
     episodeId,
     policy = toolPolicy,
   }: {
-    logic: AgentLogic<any>;
+    logic: ExpertLogic<any>;
     id?: string;
     name?: string;
     description?: string;
     model: GenerateTextOptions['model'];
     events: TEventSchemas;
     context?: TContextSchema;
-    policy?: AgentPolicy<Agent<TContextSchema, TEventSchemas>>;
+    policy?: ExpertPolicy<Expert<TContextSchema, TEventSchemas>>;
     episodeId?: string;
   }) {
     super(logic);
@@ -236,43 +228,43 @@ export class Agent<
   /**
    * Called whenever the agent detects that a message was sent from the human, assistant, or system.
    */
-  public onMessage(fn: (message: AgentMessage) => void) {
+  public onMessage(fn: (message: ExpertMessage) => void) {
     return this.on('message', (ev) => fn(ev.message));
   }
 
   /**
    * Called whenever the agent receives some feedback.
    */
-  public onFeedback(fn: (feedback: AgentFeedback) => void) {
+  public onFeedback(fn: (feedback: ExpertFeedback) => void) {
     return this.on('feedback', (ev) => fn(ev.feedback));
   }
 
   /**
    * Called whenever the agent receives an observation.
    */
-  public onObservation(fn: (observation: AgentObservation<this>) => void) {
+  public onObservation(fn: (observation: ExpertObservation<this>) => void) {
     return this.on('observation', (ev) => fn(ev.observation));
   }
 
   /**
    * Called whenever the agent makes a decision.
    */
-  public onDecision(fn: (decision: AgentDecision<this>) => void) {
+  public onDecision(fn: (decision: ExpertDecision<this>) => void) {
     return this.on('decision', (ev) => fn(ev.decision));
   }
 
   /**
    * Adds a message to the agent's short-term (local) memory.
    */
-  public addMessage(messageInput: AgentMessageInput): AgentMessage {
+  public addMessage(messageInput: ExpertMessageInput): ExpertMessage {
     const message = {
       ...messageInput,
       id: messageInput.id ?? randomId(),
       timestamp: messageInput.timestamp ?? Date.now(),
       episodeId: this.episodeId,
-    } satisfies AgentMessage;
+    } satisfies ExpertMessage;
     this.send({
-      type: 'agent.message',
+      type: 'expert.message',
       message,
     });
 
@@ -283,7 +275,7 @@ export class Agent<
     return this.getSnapshot().context.messages;
   }
 
-  public addFeedback(feedbackInput: AgentFeedbackInput) {
+  public addFeedback(feedbackInput: ExpertFeedbackInput) {
     const feedback = {
       ...feedbackInput,
       id: feedbackInput.id ?? randomId(),
@@ -291,9 +283,9 @@ export class Agent<
       attributes: { ...feedbackInput.attributes },
       timestamp: feedbackInput.timestamp ?? Date.now(),
       episodeId: feedbackInput.episodeId ?? this.episodeId,
-    } satisfies AgentFeedback;
+    } satisfies ExpertFeedback;
     this.send({
-      type: 'agent.feedback',
+      type: 'expert.feedback',
       feedback,
     });
     return feedback;
@@ -307,8 +299,8 @@ export class Agent<
   }
 
   public addObservation(
-    observationInput: AgentObservationInput<this>
-  ): AgentObservation<any> {
+    observationInput: ExpertObservationInput<this>
+  ): ExpertObservation<any> {
     const { prevState, event, state } = observationInput;
     const observation = {
       prevState,
@@ -321,10 +313,10 @@ export class Agent<
       // machineHash: observationInput.machine
       //   ? getMachineHash(observationInput.machine)
       //   : undefined,
-    } satisfies AgentObservation<any>;
+    } satisfies ExpertObservation<any>;
 
     this.send({
-      type: 'agent.observe',
+      type: 'expert.observe',
       observation,
     });
 
@@ -338,16 +330,16 @@ export class Agent<
     return this.getSnapshot().context.observations;
   }
 
-  public addInsight(insightInput: AgentInsightInput): AgentInsight {
+  public addInsight(insightInput: ExpertInsightInput): ExpertInsight {
     const insight = {
       ...insightInput,
       episodeId: insightInput.episodeId ?? this.episodeId,
       id: insightInput.id ?? randomId(),
       timestamp: insightInput.timestamp ?? Date.now(),
-    } satisfies AgentInsight;
+    } satisfies ExpertInsight;
 
     this.send({
-      type: 'agent.insight',
+      type: 'expert.insight',
       insight,
     });
 
@@ -358,9 +350,9 @@ export class Agent<
     return this.getSnapshot().context.insights;
   }
 
-  public addDecision(input: AgentDecisionInput<this>) {
+  public addDecision(input: ExpertDecisionInput<this>) {
     this.send({
-      type: 'agent.decision',
+      type: 'expert.decision',
       decision: {
         id: input.id ?? randomId(),
         episodeId: input.episodeId ?? this.episodeId,
@@ -387,12 +379,12 @@ export class Agent<
    * Observations contain the `prevState`, `event`, and current `state` of this
    * actor, as well as other properties that are useful when recalled.
    * These observations are stored in the `agent`'s short-term (local) memory
-   * and can be retrieved via `agent.getObservations()`.
+   * and can be retrieved via `expert.getObservations()`.
    *
    * @example
    * ```ts
    * // Only observes the actor's state transitions
-   * agent.interact(actor);
+   * expert.interact(actor);
    *
    * actor.start();
    * ```
@@ -407,13 +399,13 @@ export class Agent<
    * Observations contain the `prevState`, `event`, and current `state` of this
    * actor, as well as other properties that are useful when recalled.
    * These observations are stored in the `agent`'s short-term (local) memory
-   * and can be retrieved via `agent.getObservations()`.
+   * and can be retrieved via `expert.getObservations()`.
    *
    * @example
    * ```ts
    * // Observes the actor's state transitions and
    * // makes a decision if on the "summarize" state
-   * agent.interact(actor, observed => {
+   * expert.interact(actor, observed => {
    *   if (observed.state.matches('summarize')) {
    *     return {
    *       context: observed.state.context,
@@ -428,14 +420,14 @@ export class Agent<
   public interact<TActor extends ActorRefLike>(
     actorRef: TActor,
     getInput: (
-      observation: AgentObservation<TActor>
-    ) => AgentInteractInput<this> | void
+      observation: ExpertObservation<TActor>
+    ) => ExpertInteractInput<this> | void
   ): Subscription;
   public interact<TActor extends ActorRefLike>(
     actorRef: TActor,
     getInput?: (
-      observation: AgentObservation<TActor>
-    ) => AgentInteractInput<this> | void
+      observation: ExpertObservation<TActor>
+    ) => ExpertInteractInput<this> | void
   ): Subscription {
     const actorRefCheck = isActorRef(actorRef) && actorRef.src;
     const machine = isMachineActor(actorRef) ? actorRef.src : undefined;
@@ -443,12 +435,12 @@ export class Agent<
     let prevState: ObservedState<this> | undefined = undefined;
     let subscribed = true;
 
-    const agent = this;
+    const expert = this;
 
     const handleObservation = async (
-      observationInput: AgentObservationInput<any>
+      observationInput: ExpertObservationInput<any>
     ) => {
-      const observation = agent.addObservation(observationInput);
+      const observation = expert.addObservation(observationInput);
 
       const interactInput = getInput?.(observation);
 
@@ -485,7 +477,7 @@ export class Agent<
               | string
               | undefined;
 
-            const decisions = agent.getDecisions();
+            const decisions = expert.getDecisions();
 
             const decision = decisionId
               ? decisions.find((d) => d.id === decisionId)
@@ -497,7 +489,7 @@ export class Agent<
               state: inspEvent.snapshot as SnapshotFrom<TActor>,
               goal: decision?.goal,
               decisionId,
-            } satisfies AgentObservationInput<any>;
+            } satisfies ExpertObservationInput<any>;
 
             await handleObservation(observationInput);
           },
@@ -552,7 +544,7 @@ export class Agent<
               prevState,
               state: inspEvent.snapshot as SnapshotFrom<TActor>,
               goal: decision?.goal,
-            } satisfies AgentObservationInput<this>;
+            } satisfies ExpertObservationInput<this>;
 
             prevState = observationInput.state;
 
@@ -580,8 +572,8 @@ export class Agent<
    * - Additional `context`
    */
   public async decide(
-    input: AgentDecideInput<this>
-  ): Promise<AgentDecision<this> | undefined> {
+    input: ExpertDecideInput<this>
+  ): Promise<ExpertDecision<this> | undefined> {
     const resolvedOptions = input;
     const {
       policy = this.policy,
@@ -600,14 +592,14 @@ export class Agent<
     const filteredEventSchemas = allowedEvents
       ? Object.fromEntries(
           Object.entries(events).filter(([key]) => {
-            return allowedEvents.includes(key as EventFromAgent<this>['type']);
+            return allowedEvents.includes(key as EventFromExpert<this>['type']);
           })
         )
       : events;
 
     let attempts = 0;
 
-    let decision: AgentDecision<this> | undefined;
+    let decision: ExpertDecision<this> | undefined;
 
     const minimalState = {
       value: state.value,

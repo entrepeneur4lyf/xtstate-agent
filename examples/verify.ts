@@ -1,21 +1,21 @@
 import { assign, createActor, setup, log } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'verifier',
   model: openai('gpt-3.5-turbo-16k-0613'),
   events: {
-    'agent.validateAnswer': z.object({
+    'expert.validateAnswer': z.object({
       isValid: z.boolean(),
       feedback: z.string(),
     }),
-    'agent.answerQuestion': z.object({
+    'expert.answerQuestion': z.object({
       answer: z.string().describe('The answer from the agent'),
     }),
-    'agent.validateQuestion': z.object({
+    'expert.validateQuestion': z.object({
       isValid: z
         .boolean()
         .describe(
@@ -35,11 +35,11 @@ const machine = setup({
       answer: string | null;
       validation: string | null;
     },
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
   },
   actors: {
     getFromTerminal: fromTerminal,
-    agent: fromDecision(agent),
+    agent: fromDecision(expert),
   },
 }).createMachine({
   initial: 'askQuestion',
@@ -65,7 +65,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.validateQuestion': [
+        'expert.validateQuestion': [
           {
             target: 'askQuestion',
             guard: ({ event }) => !event.isValid,
@@ -85,7 +85,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.answerQuestion': {
+        'expert.answerQuestion': {
           actions: assign({
             answer: ({ event }) => event.answer,
           }),
@@ -101,7 +101,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.validateAnswer': {
+        'expert.validateAnswer': {
           actions: assign({
             validation: ({ event }) => event.feedback,
           }),

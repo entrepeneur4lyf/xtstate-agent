@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { createAgent, fromDecision } from '.';
+import { createExpert, fromDecision } from '.';
 import { createActor, createMachine, waitFor } from 'xstate';
 import { z } from 'zod';
 import { LanguageModelV1CallOptions } from 'ai';
@@ -27,7 +27,7 @@ test('fromDecision() makes a decision', async () => {
   const model = new MockLanguageModelV1({
     doGenerate,
   });
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     model,
     events: {
@@ -41,7 +41,7 @@ test('fromDecision() makes a decision', async () => {
     states: {
       first: {
         invoke: {
-          src: fromDecision(agent),
+          src: fromDecision(expert),
         },
         on: {
           doFirst: 'second',
@@ -49,7 +49,7 @@ test('fromDecision() makes a decision', async () => {
       },
       second: {
         invoke: {
-          src: fromDecision(agent),
+          src: fromDecision(expert),
         },
         on: {
           doSecond: 'third',
@@ -72,7 +72,7 @@ test('interacts with an actor', async () => {
   const model = new MockLanguageModelV1({
     doGenerate,
   });
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     model,
     events: {
@@ -100,7 +100,7 @@ test('interacts with an actor', async () => {
 
   const actor = createActor(machine);
 
-  agent.interact(actor, () => ({
+  expert.interact(actor, () => ({
     goal: 'Some goal',
   }));
 
@@ -115,7 +115,7 @@ test('interacts with an actor (late interaction)', async () => {
   const model = new MockLanguageModelV1({
     doGenerate,
   });
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     model,
     events: {
@@ -145,7 +145,7 @@ test('interacts with an actor (late interaction)', async () => {
 
   actor.start();
 
-  agent.interact(actor, () => ({
+  expert.interact(actor, () => ({
     goal: 'Some goal',
   }));
 
@@ -154,12 +154,12 @@ test('interacts with an actor (late interaction)', async () => {
   expect(actor.getSnapshot().value).toBe('third');
 });
 
-test('agent.decide() makes a decision based on goal and state (tool policy)', async () => {
+test('expert.decide() makes a decision based on goal and state (tool policy)', async () => {
   const model = new MockLanguageModelV1({
     doGenerate,
   });
 
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     model,
     events: {
@@ -167,7 +167,7 @@ test('agent.decide() makes a decision based on goal and state (tool policy)', as
     },
   });
 
-  const decision = await agent.decide({
+  const decision = await expert.decide({
     goal: 'Make the best move',
     state: {
       value: 'playing',
@@ -202,7 +202,7 @@ test.each([
   [3, true],
   [3, false],
 ])(
-  'agent.decide() retries if a decision is not made (%i attempts, succeed: %s)',
+  'expert.decide() retries if a decision is not made (%i attempts, succeed: %s)',
   async (maxAttempts, succeed) => {
     let attempts = 0;
     const doGenerateWithRetry = async (params: LanguageModelV1CallOptions) => {
@@ -235,7 +235,7 @@ test.each([
       doGenerate: doGenerateWithRetry,
     });
 
-    const agent = createAgent({
+    const expert = createExpert({
       id: 'test',
       model,
       events: {
@@ -243,7 +243,7 @@ test.each([
       },
     });
 
-    const decision = await agent.decide({
+    const decision = await expert.decide({
       goal: 'Make the best move',
       state: {
         value: 'playing',
@@ -276,7 +276,7 @@ test.each([
 );
 
 test.each([['MOVE'], ['FORFEIT']] as const)(
-  'agent.decide() respects allowedEvents constraint (event: %s)',
+  'expert.decide() respects allowedEvents constraint (event: %s)',
   async (allowedEventType) => {
     const model = new MockLanguageModelV1({
       doGenerate: async (params: LanguageModelV1CallOptions) => {
@@ -300,7 +300,7 @@ test.each([['MOVE'], ['FORFEIT']] as const)(
       },
     });
 
-    const agent = createAgent({
+    const expert = createExpert({
       id: 'test',
       model,
       events: {
@@ -310,7 +310,7 @@ test.each([['MOVE'], ['FORFEIT']] as const)(
       },
     });
 
-    const decision = await agent.decide({
+    const decision = await expert.decide({
       goal: 'Make the best move',
       state: {
         value: 'playing',
@@ -323,11 +323,11 @@ test.each([['MOVE'], ['FORFEIT']] as const)(
   }
 );
 
-test('agent.decide() accepts custom episodeId', async () => {
+test('expert.decide() accepts custom episodeId', async () => {
   const model = new MockLanguageModelV1({
     doGenerate,
   });
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {
       WIN: z.object({}),
@@ -336,7 +336,7 @@ test('agent.decide() accepts custom episodeId', async () => {
   });
 
   const customEpisodeId = 'custom-episode-123';
-  const decision = await agent.decide({
+  const decision = await expert.decide({
     goal: 'Win the game',
     state: { value: 'playing' },
     episodeId: customEpisodeId,

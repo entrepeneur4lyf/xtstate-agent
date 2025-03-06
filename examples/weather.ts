@@ -1,4 +1,4 @@
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { assign, createActor, fromPromise, log, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 import { z } from 'zod';
@@ -48,14 +48,14 @@ const getWeather = fromPromise(async ({ input }: { input: string }) => {
   return results;
 });
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'weather',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.getWeather': z.object({
+    'expert.getWeather': z.object({
       location: z.string().describe('The location to get the weather for'),
     }),
-    'agent.reportWeather': z.object({
+    'expert.reportWeather': z.object({
       location: z
         .string()
         .describe('The location the weather is being reported for'),
@@ -63,7 +63,7 @@ const agent = createAgent({
       lowF: z.number().describe('The low temperature today in Fahrenheit'),
       summary: z.string().describe('A summary of the weather conditions'),
     }),
-    'agent.doSomethingElse': z
+    'expert.doSomethingElse': z
       .object({})
       .describe(
         'Do something else, because the user did not provide a location'
@@ -78,10 +78,10 @@ const machine = setup({
       count: number;
       result: string | null;
     },
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
   },
   actors: {
-    agent: fromDecision(agent),
+    agent: fromDecision(expert),
     getWeather,
     getFromTerminal: fromTerminal,
   },
@@ -112,11 +112,11 @@ const machine = setup({
     decide: {
       entry: log('Deciding...'),
       on: {
-        'agent.getWeather': {
+        'expert.getWeather': {
           actions: log(({ event }) => event),
           target: 'gettingWeather',
         },
-        'agent.doSomethingElse': 'getLocation',
+        'expert.doSomethingElse': 'getLocation',
       },
     },
     gettingWeather: {
@@ -138,7 +138,7 @@ const machine = setup({
     },
     reportWeather: {
       on: {
-        'agent.reportWeather': {
+        'expert.reportWeather': {
           actions: log(({ event }) => event),
           target: 'getLocation',
         },
@@ -156,7 +156,7 @@ const machine = setup({
 const actor = createActor(machine);
 actor.start();
 
-agent.interact(actor, ({ state }) => {
+expert.interact(actor, ({ state }) => {
   if (state.matches('decide')) {
     return {
       goal: `Decide what to do based on the given location, which may or may not be a location`,

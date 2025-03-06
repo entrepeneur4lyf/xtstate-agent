@@ -1,31 +1,31 @@
 import { openai } from '@ai-sdk/openai';
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { z } from 'zod';
 import { createActor, log, setup } from 'xstate';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'support-agent',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z.string().describe('The response from the agent'),
     }),
-    'agent.frontline.classify': z.object({
+    'expert.frontline.classify': z.object({
       category: z
         .enum(['billing', 'technical', 'other'])
         .describe('The category of the customer issue'),
     }),
-    'agent.refund': z
+    'expert.refund': z
       .object({
         response: z.string().describe('The response from the agent'),
       })
       .describe('The agent wants to refund the user'),
-    'agent.technical.solve': z.object({
+    'expert.technical.solve': z.object({
       solution: z
         .string()
         .describe('The solution provided by the technical agent'),
     }),
-    'agent.endConversation': z
+    'expert.endConversation': z
       .object({
         response: z.string().describe('The response from the agent'),
       })
@@ -35,13 +35,13 @@ const agent = createAgent({
 
 const machine = setup({
   types: {
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
     input: {} as string,
     context: {} as {
       customerIssue: string;
     },
   },
-  actors: { agent: fromDecision(agent) },
+  actors: { agent: fromDecision(expert) },
 }).createMachine({
   initial: 'frontline',
   context: ({ input }) => ({
@@ -50,7 +50,7 @@ const machine = setup({
   states: {
     frontline: {
       on: {
-        'agent.frontline.classify': [
+        'expert.frontline.classify': [
           {
             actions: log(({ event }) => event),
             guard: ({ event }) => event.category === 'billing',
@@ -70,7 +70,7 @@ const machine = setup({
     },
     billing: {
       on: {
-        'agent.refund': {
+        'expert.refund': {
           actions: log(({ event }) => event),
           target: 'refund',
         },
@@ -78,7 +78,7 @@ const machine = setup({
     },
     technical: {
       on: {
-        'agent.technical.solve': {
+        'expert.technical.solve': {
           actions: log(({ event }) => event),
           target: 'conversational',
         },
@@ -86,7 +86,7 @@ const machine = setup({
     },
     conversational: {
       on: {
-        'agent.endConversation': {
+        'expert.endConversation': {
           actions: log(({ event }) => event),
           target: 'end',
         },
@@ -110,7 +110,7 @@ const actor = createActor(machine, {
 
 actor.start();
 
-agent.interact(actor, ({ state }) => {
+expert.interact(actor, ({ state }) => {
   if (state.matches('frontline')) {
     return {
       goal: `The previous conversation is an interaction between a customer support representative and a user.

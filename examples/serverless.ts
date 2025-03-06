@@ -1,30 +1,30 @@
 import { openai } from '@ai-sdk/openai';
 import {
-  AgentDecision,
-  AgentFeedback,
-  AgentInsight,
-  AgentMessage,
-  AgentObservation,
-  createAgent,
+  ExpertDecision,
+  ExpertFeedback,
+  ExpertInsight,
+  ExpertMessage,
+  ExpertObservation,
+  createExpert,
 } from '../src';
 import { z } from 'zod';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'simple',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.moveLeft': z.object({}),
-    'agent.moveRight': z.object({}),
-    'agent.doNothing': z.object({}),
+    'expert.moveLeft': z.object({}),
+    'expert.moveRight': z.object({}),
+    'expert.doNothing': z.object({}),
   },
 });
 
 const db = {
-  observations: [] as AgentObservation<any>[],
-  feedbackItems: [] as AgentFeedback[],
-  decisions: [] as AgentDecision[],
-  messages: [] as AgentMessage[],
-  insights: [] as AgentInsight[],
+  observations: [] as ExpertObservation<any>[],
+  feedbackItems: [] as ExpertFeedback[],
+  decisions: [] as ExpertDecision[],
+  messages: [] as ExpertMessage[],
+  insights: [] as ExpertInsight[],
 };
 
 // async function postObservation(req: unknown) {
@@ -55,17 +55,17 @@ async function getDecision(req: {
     similarObservations.map((obs) => obs.id).includes(insight.observationId)
   );
 
-  const decision = await agent.decide({
+  const decision = await expert.decide({
     goal: req.query.goal,
     state: observations?.state,
     observations: similarObservations,
     feedback: similarFeedback,
     insights,
-    allowedEvents: ['agent.moveLeft', 'agent.moveRight'],
+    allowedEvents: ['expert.moveLeft', 'expert.moveRight'],
   });
 
-  db.decisions.push(...agent.getDecisions());
-  db.messages.push(...agent.getMessages());
+  db.decisions.push(...expert.getDecisions());
+  db.messages.push(...expert.getMessages());
 
   return decision;
 }

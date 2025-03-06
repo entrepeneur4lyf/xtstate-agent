@@ -1,14 +1,14 @@
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { assign, createActor, log, setup } from 'xstate';
 import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
 import { fromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'number-guesser',
   model: openai('gpt-3.5-turbo-1106'),
   events: {
-    'agent.guess': z.object({
+    'expert.guess': z.object({
       reasoning: z.string().describe('The reasoning for the guess'),
       number: z.number().min(1).max(10).describe('The number guessed'),
     }),
@@ -21,10 +21,10 @@ const machine = setup({
       previousGuesses: number[];
       answer: number | null;
     },
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
   },
   actors: {
-    agent: fromDecision(agent),
+    agent: fromDecision(expert),
     getFromTerminal: fromTerminal,
   },
 }).createMachine({
@@ -71,7 +71,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.guess': {
+        'expert.guess': {
           actions: [
             assign({
               previousGuesses: ({ context, event }) => [

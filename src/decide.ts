@@ -5,10 +5,10 @@ import {
   PromiseActorLogic,
 } from 'xstate';
 import {
-  AnyAgent,
-  AgentDecideInput,
+  AnyExpert,
+  ExpertDecideInput,
   TransitionData,
-  AgentDecision,
+  ExpertDecision,
 } from './types';
 import { getTransitions } from './utils';
 import { CoreTool, generateText, LanguageModel, tool } from 'ai';
@@ -20,14 +20,14 @@ export type AgentDecideLogicInput = {
   context?: Record<string, any>;
 } & Omit<Parameters<typeof generateText>[0], 'model' | 'tools' | 'prompt'>;
 
-export type MachineDecisionLogic<TAgent extends AnyAgent> = PromiseActorLogic<
-  AgentDecision<TAgent> | undefined,
+export type MachineDecisionLogic<TExpert extends AnyExpert> = PromiseActorLogic<
+  ExpertDecision<TExpert> | undefined,
   AgentDecideLogicInput | string
 >;
 
-export function fromDecision<TAgent extends AnyAgent>(
-  agent: TAgent,
-  defaultInput?: AgentDecideInput<TAgent>
+export function fromDecision<TExpert extends AnyExpert>(
+  expert: TExpert,
+  defaultInput?: ExpertDecideInput<TExpert>
 ): MachineDecisionLogic<any> {
   return fromPromise(async ({ input, self }) => {
     const parentRef = self._parent;
@@ -42,7 +42,7 @@ export function fromDecision<TAgent extends AnyAgent>(
       ...inputObject,
     };
 
-    const decision = await agent.decide({
+    const decision = await expert.decide({
       machine: (parentRef as AnyActor).logic,
       state: snapshot,
       allowedEvents: resolvedInput.allowedEvents as any[],
@@ -59,11 +59,11 @@ export function fromDecision<TAgent extends AnyAgent>(
   }) as MachineDecisionLogic<any>;
 }
 
-export function getToolMap<TAgent extends AnyAgent>(
-  agent: TAgent,
-  input: AgentDecideInput<any>
+export function getToolMap<TExpert extends AnyExpert>(
+  expert: TExpert,
+  input: ExpertDecideInput<any>
 ): Record<string, CoreTool<any, any>> | undefined {
-  const events = input.events ?? (agent.events as ZodEventMapping);
+  const events = input.events ?? (expert.events as ZodEventMapping);
   // Get all of the possible next transitions
   const transitions: TransitionData[] = input.machine
     ? getTransitions(input.state, input.machine)

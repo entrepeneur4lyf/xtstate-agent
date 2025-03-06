@@ -1,10 +1,10 @@
 import { openai } from '@ai-sdk/openai';
-import { createAgent, fromDecision } from '../src';
+import { createExpert, fromDecision } from '../src';
 import { assign, createActor, createMachine, fromPromise } from 'xstate';
 import { z } from 'zod';
 import { fromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   model: openai('gpt-4o-mini'),
   events: {
     getTime: z.object({}).describe('Get the current time'),
@@ -32,7 +32,7 @@ const machine = createMachine({
     },
     deciding: {
       invoke: {
-        src: fromDecision(agent),
+        src: fromDecision(expert),
         input: ({ context }) => ({
           goal: 'Satisfy the user question',
           context,

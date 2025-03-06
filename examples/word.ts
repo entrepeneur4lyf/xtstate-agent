@@ -2,14 +2,14 @@ import { assign, createActor, log, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 import {
   ContextFromAgent,
-  createAgent,
+  createExpert,
   fromDecision,
-  TypesFromAgent,
+  TypesFromExpert,
 } from '../src';
 import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'word',
   model: openai('gpt-4o-mini'),
   context: {
@@ -18,16 +18,16 @@ const agent = createAgent({
     lettersGuessed: z.array(z.string()).describe('The letters guessed'),
   },
   events: {
-    'agent.guessLetter': z.object({
+    'expert.guessLetter': z.object({
       letter: z.string().min(1).max(1).describe('The letter guessed'),
       reasoning: z.string().describe('The reasoning behind the guess'),
     }),
 
-    'agent.guessWord': z.object({
+    'expert.guessWord': z.object({
       word: z.string().describe('The word guessed'),
     }),
 
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z
         .string()
         .describe(
@@ -41,12 +41,12 @@ const context = {
   word: null,
   guessedWord: null,
   lettersGuessed: [],
-} satisfies ContextFromAgent<typeof agent>;
+} satisfies ContextFromAgent<typeof expert>;
 
 const wordGuesserMachine = setup({
-  types: {} as TypesFromAgent<typeof agent>,
+  types: {} as TypesFromExpert<typeof expert>,
   actors: {
-    agent: fromDecision(agent),
+    agent: fromDecision(expert),
     getFromTerminal: fromTerminal,
   },
   actions: {
@@ -93,7 +93,7 @@ const wordGuesserMachine = setup({
         }),
       },
       on: {
-        'agent.guessLetter': {
+        'expert.guessLetter': {
           actions: [
             assign({
               lettersGuessed: ({ context, event }) => {
@@ -105,7 +105,7 @@ const wordGuesserMachine = setup({
           target: 'guessing',
           reenter: true,
         },
-        'agent.guessWord': {
+        'expert.guessWord': {
           actions: [
             assign({
               guessedWord: ({ event }) => event.word,
@@ -134,7 +134,7 @@ const wordGuesserMachine = setup({
         }),
       },
       on: {
-        'agent.guessWord': {
+        'expert.guessWord': {
           actions: [
             assign({
               guessedWord: ({ event }) => event.word,
@@ -163,7 +163,7 @@ const wordGuesserMachine = setup({
         }
       }),
       on: {
-        'agent.respond': {
+        'expert.respond': {
           actions: log(({ event }) => event.response),
           target: 'providingWord',
         },

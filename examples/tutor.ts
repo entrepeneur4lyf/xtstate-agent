@@ -1,10 +1,10 @@
 import { assign, createActor, log, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'tutor',
   model: openai('gpt-4o-mini'),
   events: {
@@ -28,9 +28,9 @@ const machine = setup({
     context: {} as {
       conversation: string[];
     },
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
   },
-  actors: { agent: fromDecision(agent), getFromTerminal: fromTerminal },
+  actors: { agent: fromDecision(expert), getFromTerminal: fromTerminal },
 }).createMachine({
   initial: 'human',
   context: {

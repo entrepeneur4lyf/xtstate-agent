@@ -1,10 +1,10 @@
-import { createAgent, TypesFromAgent } from '../src';
+import { createExpert, TypesFromExpert } from '../src';
 import { assign, createActor, setup } from 'xstate';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { experimental_shortestPathPolicy } from '../src/policies/shortestPathPolicy';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'die-hard-solver',
   model: openai('gpt-4o'),
   events: {
@@ -38,7 +38,7 @@ const agent = createAgent({
 });
 
 const waterJugMachine = setup({
-  types: {} as TypesFromAgent<typeof agent>,
+  types: {} as TypesFromExpert<typeof expert>,
 }).createMachine({
   initial: 'solving',
   context: { jug3: 0, jug5: 0 },
@@ -99,7 +99,7 @@ async function main() {
       console.log('Max tries reached');
       throw new Error('Max tries reached');
     }
-    const decision = await agent.decide({
+    const decision = await expert.decide({
       machine: waterJugMachine,
       goal: 'Get exactly 4 gallons of water in the 5-gallon jug',
       state: waterJugActor.getSnapshot(),

@@ -1,10 +1,10 @@
 import { assign, setup, createActor } from 'xstate';
 import { z } from 'zod';
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { fromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'todo',
   model: openai('gpt-4o-mini'),
   events: {
@@ -37,10 +37,10 @@ const machine = setup({
       command: string | null;
     },
     events: {} as
-      | EventFromAgent<typeof agent>
+      | EventFromExpert<typeof expert>
       | { type: 'assist'; command: string },
   },
-  actors: { agent: fromDecision(agent), getFromTerminal: fromTerminal },
+  actors: { agent: fromDecision(expert), getFromTerminal: fromTerminal },
 }).createMachine({
   context: {
     command: null,

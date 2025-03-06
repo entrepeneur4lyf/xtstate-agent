@@ -18,18 +18,18 @@ import {
 } from 'ai';
 import { ZodContextMapping, ZodEventMapping } from './schemas';
 import { TypeOf } from 'zod';
-import { Agent } from './agent';
+import { Expert } from './agent';
 
 export type GenerateTextOptions = Parameters<typeof generateText>[0];
 
 export type StreamTextOptions = Parameters<typeof streamText>[0];
 
-export type CostFunction<TAgent extends AnyAgent> = (
-  path: AgentPath<TAgent>
+export type CostFunction<TExpert extends AnyExpert> = (
+  path: ExpertPath<TExpert>
 ) => number;
 
-export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
-  AgentGenerateTextOptions,
+export type ExpertDecideInput<TExpert extends AnyExpert> = Omit<
+  ExpertGenerateTextOptions,
   'model' | 'prompt' | 'tools' | 'toolChoice'
 > & {
   /**
@@ -39,9 +39,9 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
   /**
    * The currently observed state.
    */
-  state: ObservedState<TAgent>;
+  state: ObservedState<TExpert>;
   /**
-   * The context to provide in the prompt to the agent. This overrides the `state.context`.
+   * The context to provide in the prompt to the expert. This overrides the `state.context`.
    */
   context?: Record<string, any>;
   /**
@@ -54,7 +54,7 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
    * event types to Zod event schemas.
    */
   events?: ZodEventMapping;
-  allowedEvents?: Array<EventFromAgent<TAgent>['type']>;
+  allowedEvents?: Array<EventFromExpert<TExpert>['type']>;
   /**
    * The state machine that represents the environment the agent
    * is interacting with.
@@ -64,7 +64,7 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
   /**
    * A function that calculates the total cost of the path to the goal state.
    */
-  costFunction?: CostFunction<TAgent>;
+  costFunction?: CostFunction<TExpert>;
 
   /**
    * The maximum number of attempts to make a decision.
@@ -74,52 +74,53 @@ export type AgentDecideInput<TAgent extends AnyAgent> = Omit<
   /**
    * The policy to use for making a decision.
    */
-  policy?: AgentPolicy<TAgent>;
+  policy?: ExpertPolicy<TExpert>;
   model?: LanguageModel;
   /**
-   * The previous relevant feedback from the agent.
+   * The previous relevant feedback from the expert.
    */
-  feedback?: AgentFeedback[];
+  feedback?: ExpertFeedback[];
   /**
-   * The previous relevant observations from the agent.
+   * The previous relevant observations from the expert.
    */
-  observations?: AgentObservation<any>[];
+  observations?: ExpertObservation<any>[];
   /**
-   * The previous relevant decisions from the agent.
+   * The previous relevant decisions from the expert.
    */
-  decisions?: AgentDecision<TAgent>[];
+  decisions?: ExpertDecision<TExpert>[];
   /**
-   * The previous relevant insights from the agent.
+   * The previous relevant insights from the expert.
    */
-  insights?: AgentInsight[];
+  insights?: ExpertInsight[];
   toolChoice?: 'auto' | 'none' | 'required';
 } & BaseInput;
 
-export type AgentStep<TAgent extends AnyAgent> = {
+export type ExpertStep<TExpert extends AnyExpert> = {
   /** The event to take */
-  event: EventFromAgent<TAgent>;
+  event: EventFromExpert<TExpert>;
   /** The next expected state after taking the event */
-  state: ObservedState<TAgent> | null;
+  state: ObservedState<TExpert> | null;
 };
 
-export type AgentPath<TAgent extends AnyAgent> = {
+export type ExpertPath<TExpert extends AnyExpert> = {
   /** The expected ending state of the path */
-  state: ObservedState<TAgent> | null;
+  state: ObservedState<TExpert> | null;
   /** The steps to reach the ending state */
-  steps: Array<AgentStep<TAgent>>;
+  steps: Array<ExpertStep<TExpert>>;
   weight?: number;
 };
 
-export interface AgentDecisionInput<TAgent extends AnyAgent> extends BaseInput {
+export interface ExpertDecisionInput<TExpert extends AnyExpert>
+  extends BaseInput {
   goal: string;
   decisionId?: string | null;
   policy?: string | null;
-  goalState?: ObservedState<TAgent> | null;
-  nextEvent?: EventFromAgent<TAgent> | null;
-  paths?: AgentPath<TAgent>[];
+  goalState?: ObservedState<TExpert> | null;
+  nextEvent?: EventFromExpert<TExpert> | null;
+  paths?: ExpertPath<TExpert>[];
 }
 
-export interface AgentDecision<TAgent extends AnyAgent = AnyAgent>
+export interface ExpertDecision<TExpert extends AnyExpert = AnyExpert>
   extends BaseProperties {
   /**
    * The parent decision that this decision is a part of.
@@ -133,17 +134,17 @@ export interface AgentDecision<TAgent extends AnyAgent = AnyAgent>
   /**
    * The ending state of the decision.
    */
-  goalState: ObservedState<TAgent> | null;
+  goalState: ObservedState<TExpert> | null;
   /**
    * The next event that the agent decided needs to occur to achieve the `goal`.
    *
    * This next event is chosen from the
    */
-  nextEvent: EventFromAgent<TAgent> | null;
+  nextEvent: EventFromExpert<TExpert> | null;
   /**
    * The paths that the agent can take to achieve the goal.
    */
-  paths: AgentPath<TAgent>[];
+  paths: ExpertPath<TExpert>[];
 }
 
 export interface TransitionData {
@@ -153,7 +154,7 @@ export interface TransitionData {
   target?: any;
 }
 
-export type PromptTemplate<TAgent extends AnyAgent> = (data: {
+export type PromptTemplate<TExpert extends AnyExpert> = (data: {
   goal: string;
   /**
    * The observed state
@@ -172,38 +173,38 @@ export type PromptTemplate<TAgent extends AnyAgent> = (data: {
   /**
    * Relevant past observations
    */
-  observations?: AgentObservation<any>[]; // TODO
+  observations?: ExpertObservation<any>[]; // TODO
   /**
    * Relevant feedback
    */
-  feedback?: AgentFeedback[];
+  feedback?: ExpertFeedback[];
   /**
    * Relevant messages
    */
-  messages?: AgentMessage[];
+  messages?: ExpertMessage[];
   /**
    * Relevant past decisions
    */
-  decisions?: AgentDecision<TAgent>[];
+  decisions?: ExpertDecision<TExpert>[];
   /**
    * Relevant past insights
    */
-  insights?: AgentInsight[];
+  insights?: ExpertInsight[];
 }) => string;
 
-export type AgentPolicy<TAgent extends AnyAgent = AnyAgent> = (
-  agent: TAgent,
-  input: AgentDecideInput<TAgent>
-) => Promise<AgentDecision<TAgent> | undefined>;
+export type ExpertPolicy<TExpert extends AnyExpert = AnyExpert> = (
+  agent: TExpert,
+  input: ExpertDecideInput<TExpert>
+) => Promise<ExpertDecision<TExpert> | undefined>;
 
-export type AgentInteractInput<T extends AnyAgent> = Omit<
-  AgentDecideInput<T>,
+export type ExpertInteractInput<T extends AnyExpert> = Omit<
+  ExpertDecideInput<T>,
   'state'
 > & {
   state?: never;
 };
 
-export interface AgentFeedback extends BaseProperties {
+export interface ExpertFeedback extends BaseProperties {
   decisionId: string;
   reward: number;
   comment: string | undefined;
@@ -218,7 +219,7 @@ interface BaseProperties {
 
 type BaseInput = Partial<BaseProperties>;
 
-export interface AgentFeedbackInput extends BaseInput {
+export interface ExpertFeedbackInput extends BaseInput {
   /**
    * The decision ID that this feedback is relevant for.
    */
@@ -228,7 +229,7 @@ export interface AgentFeedbackInput extends BaseInput {
   attributes?: Record<string, any>;
 }
 
-export type AgentMessage = BaseProperties &
+export type ExpertMessage = BaseProperties &
   CoreMessage & {
     /**
      * The parent decision that this message is a part of.
@@ -289,7 +290,7 @@ Arguments of the tool call. This is a JSON-serializable object that matches the 
   providerMetadata?: LanguageModelV1ProviderMetadata;
 }
 
-export type AgentMessageInput = CoreMessage & {
+export type ExpertMessageInput = CoreMessage & {
   timestamp?: number;
   id?: string;
   /**
@@ -300,7 +301,7 @@ export type AgentMessageInput = CoreMessage & {
   result?: GenerateTextResult<any, any>;
 };
 
-export interface AgentObservation<TActor extends ActorRefLike> {
+export interface ExpertObservation<TActor extends ActorRefLike> {
   id: string;
   episodeId: string;
   /**
@@ -315,65 +316,65 @@ export interface AgentObservation<TActor extends ActorRefLike> {
   timestamp: number;
 }
 
-export interface AgentObservationInput<TAgent extends AnyAgent>
+export interface ExpertObservationInput<TExpert extends AnyExpert>
   extends BaseInput {
-  state: ObservedState<TAgent>;
+  state: ObservedState<TExpert>;
   /**
    * The agent decision that the observation is relevant for
    */
   decisionId?: string | undefined;
-  prevState?: ObservedState<TAgent>;
+  prevState?: ObservedState<TExpert>;
   event?: AnyEventObject;
   goal?: string | undefined;
 }
 
-export type AgentEmitted<TAgent extends AnyAgent> =
+export type ExpertEmittedEvent<TExpert extends AnyExpert> =
   | {
       type: 'feedback';
-      feedback: AgentFeedback;
+      feedback: ExpertFeedback;
     }
   | {
       type: 'observation';
-      observation: AgentObservation<any>; // TODO
+      observation: ExpertObservation<any>; // TODO
     }
   | {
       type: 'message';
-      message: AgentMessage;
+      message: ExpertMessage;
     }
   | {
       type: 'decision';
-      decision: AgentDecision<TAgent>;
+      decision: ExpertDecision<TExpert>;
     }
   | {
       type: 'insight';
-      insight: AgentInsight;
+      insight: ExpertInsight;
     };
 
-export type AgentLogic<TAgent extends AnyAgent> = ActorLogic<
-  TransitionSnapshot<AgentMemoryContext<TAgent>>,
+export type ExpertLogic<TExpert extends AnyExpert> = ActorLogic<
+  TransitionSnapshot<ExpertMemoryContext<TExpert>>,
   | {
-      type: 'agent.feedback';
-      feedback: AgentFeedback;
+      type: 'expert.feedback';
+      feedback: ExpertFeedback;
     }
   | {
-      type: 'agent.observe';
-      observation: AgentObservation<any>; // TODO
+      type: 'expert.observe';
+      observation: ExpertObservation<any>; // TODO
     }
   | {
-      type: 'agent.message';
-      message: AgentMessage;
+      type: 'expert.message';
+      message: ExpertMessage;
     }
   | {
-      type: 'agent.decision';
-      decision: AgentDecision<TAgent>;
+      type: 'expert.decision';
+      decision: ExpertDecision<TExpert>;
     }
   | {
-      type: 'agent.insight';
-      insight: AgentInsight;
+      type: 'expert.insight';
+      insight: ExpertInsight;
     },
   any, // TODO: input
   any,
-  AgentEmitted<TAgent>
+  ExpertEmittedEvent<TExpert>
 >;
 
 export type EventsFromZodEventMapping<TEventSchemas extends ZodEventMapping> =
@@ -391,31 +392,31 @@ export type ContextFromZodContextMapping<
   [K in keyof TContextSchema & string]: TypeOf<TContextSchema[K]>;
 };
 
-export type AnyAgent = Agent<any, any>;
+export type AnyExpert = Expert<any, any>;
 
-export type FromAgent<T> = T | ((agent: AnyAgent) => T | Promise<T>);
+export type FromExpert<T> = T | ((agent: AnyExpert) => T | Promise<T>);
 
 export type CommonTextOptions = {
-  prompt: FromAgent<string>;
+  prompt: FromExpert<string>;
   model?: LanguageModel;
   messages?: CoreMessage[];
   template?: PromptTemplate<any>;
   context?: Record<string, any>;
 };
 
-export type AgentGenerateTextOptions = Omit<
+export type ExpertGenerateTextOptions = Omit<
   GenerateTextOptions,
   'model' | 'prompt' | 'messages'
 > &
   CommonTextOptions;
 
-export type AgentStreamTextOptions = Omit<
+export type ExpertStreamTextOptions = Omit<
   StreamTextOptions,
   'model' | 'prompt' | 'messages'
 > &
   CommonTextOptions;
 
-export interface ObservedState<TAgent extends AnyAgent> {
+export interface ObservedState<TExpert extends AnyExpert> {
   /**
    * The current state value of the state machine, e.g.
    * `"loading"` or `"processing"` or `"ready"`
@@ -424,7 +425,7 @@ export interface ObservedState<TAgent extends AnyAgent> {
   /**
    * Additional contextual data related to the current state
    */
-  context?: ContextFromAgent<TAgent>;
+  context?: ContextFromAgent<TExpert>;
 }
 
 export type ObservedStateFrom<TActor extends ActorRefLike> = Pick<
@@ -432,40 +433,26 @@ export type ObservedStateFrom<TActor extends ActorRefLike> = Pick<
   'value' | 'context'
 >;
 
-export type AgentMemoryContext<TAgent extends AnyAgent> = {
-  observations: AgentObservation<any>[]; // TODO
-  messages: AgentMessage[];
-  decisions: AgentDecision<TAgent>[];
-  feedback: AgentFeedback[];
-  insights: AgentInsight[];
+export type ExpertMemoryContext<TExpert extends AnyExpert> = {
+  observations: ExpertObservation<any>[]; // TODO
+  messages: ExpertMessage[];
+  decisions: ExpertDecision<TExpert>[];
+  feedback: ExpertFeedback[];
+  insights: ExpertInsight[];
 };
-
-export interface AgentLongTermMemory<TAgent extends AnyAgent> {
-  get<K extends keyof AgentMemoryContext<TAgent>>(
-    key: K
-  ): Promise<AgentMemoryContext<TAgent>[K]>;
-  append<K extends keyof AgentMemoryContext<TAgent>>(
-    key: K,
-    item: AgentMemoryContext<TAgent>[K][0]
-  ): Promise<void>;
-  set<K extends keyof AgentMemoryContext<TAgent>>(
-    key: K,
-    items: AgentMemoryContext<TAgent>[K]
-  ): Promise<void>;
-}
 
 export type Compute<A extends any> = { [K in keyof A]: A[K] } & unknown;
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type EventFromAgent<T extends AnyAgent> = T extends Agent<
+export type EventFromExpert<T extends AnyExpert> = T extends Expert<
   infer _,
   infer TEventSchemas
 >
   ? EventsFromZodEventMapping<TEventSchemas>
   : never;
 
-export type TypesFromAgent<T extends AnyAgent> = T extends Agent<
+export type TypesFromExpert<T extends AnyExpert> = T extends Expert<
   infer TContextSchema,
   infer TEventSchema
 >
@@ -475,37 +462,37 @@ export type TypesFromAgent<T extends AnyAgent> = T extends Agent<
     }
   : never;
 
-export type ContextFromAgent<T extends AnyAgent> = T extends Agent<
+export type ContextFromAgent<T extends AnyExpert> = T extends Expert<
   infer TContextSchema,
   infer _TEventSchema
 >
   ? ContextFromZodContextMapping<TContextSchema>
   : never;
 
-export interface StorageAdapter<TAgent extends AnyAgent, TQuery> {
+export interface StorageAdapter<TExpert extends AnyExpert, TQuery> {
   addObservation(
-    observationInput: AgentObservationInput<TAgent>
-  ): Promise<AgentObservation<any>>;
-  getObservations(queryObject?: TQuery): Promise<AgentObservation<any>[]>;
-  addFeedback(feedbackInput: AgentFeedbackInput): Promise<AgentFeedback>;
-  getFeedback(queryObject?: TQuery): Promise<AgentFeedback[]>;
-  addMessage(messageInput: AgentMessageInput): Promise<AgentMessage>;
-  getMessages(queryObject?: TQuery): Promise<AgentMessage[]>;
+    observationInput: ExpertObservationInput<TExpert>
+  ): Promise<ExpertObservation<any>>;
+  getObservations(queryObject?: TQuery): Promise<ExpertObservation<any>[]>;
+  addFeedback(feedbackInput: ExpertFeedbackInput): Promise<ExpertFeedback>;
+  getFeedback(queryObject?: TQuery): Promise<ExpertFeedback[]>;
+  addMessage(messageInput: ExpertMessageInput): Promise<ExpertMessage>;
+  getMessages(queryObject?: TQuery): Promise<ExpertMessage[]>;
   addDecision(
-    decisionInput: AgentDecideInput<TAgent>
-  ): Promise<AgentDecision<TAgent>>;
-  getDecisions(queryObject?: TQuery): Promise<AgentDecision<TAgent>[]>;
+    decisionInput: ExpertDecideInput<TExpert>
+  ): Promise<ExpertDecision<TExpert>>;
+  getDecisions(queryObject?: TQuery): Promise<ExpertDecision<TExpert>[]>;
 }
 
 export type StorageAdapterQuery<T extends StorageAdapter<any, any>> =
   T extends StorageAdapter<infer _, infer TQuery> ? TQuery : never;
 
-export interface AgentInsightInput extends BaseInput {
+export interface ExpertInsightInput extends BaseInput {
   observationId: string;
   attributes: Record<string, any>;
 }
 
-export interface AgentInsight extends BaseProperties {
+export interface ExpertInsight extends BaseProperties {
   observationId: string;
   attributes: Record<string, any>;
 }

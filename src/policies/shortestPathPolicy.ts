@@ -1,9 +1,9 @@
 import { generateObject } from 'ai';
 import {
-  AgentDecision,
-  AgentDecideInput,
-  AgentStep,
-  AnyAgent,
+  ExpertDecision,
+  ExpertDecideInput,
+  ExpertStep,
+  AnyExpert,
   CostFunction,
   ObservedState,
 } from '../types';
@@ -27,7 +27,7 @@ function observedStatesEqual(
   );
 }
 
-function trimSteps(steps: AgentStep<any>[], currentState: ObservedState<any>) {
+function trimSteps(steps: ExpertStep<any>[], currentState: ObservedState<any>) {
   const index = steps.findIndex(
     (step) => step.state && observedStatesEqual(step.state, currentState)
   );
@@ -39,10 +39,10 @@ function trimSteps(steps: AgentStep<any>[], currentState: ObservedState<any>) {
   return steps.slice(index + 1, steps.length);
 }
 
-export async function experimental_shortestPathPolicy<T extends AnyAgent>(
-  agent: T,
-  input: AgentDecideInput<any>
-): Promise<AgentDecision<any> | undefined> {
+export async function experimental_shortestPathPolicy<T extends AnyExpert>(
+  expert: T,
+  input: ExpertDecideInput<any>
+): Promise<ExpertDecision<any> | undefined> {
   const costFunction: CostFunction<any> =
     input.costFunction ?? ((path) => path.weight ?? Infinity);
   const existingDecision = input.decisions?.find(
@@ -60,10 +60,10 @@ export async function experimental_shortestPathPolicy<T extends AnyAgent>(
   }
 
   if (input.machine && !existingDecision) {
-    const contextSchema = zodToJsonSchema(z.object(agent.context));
+    const contextSchema = zodToJsonSchema(z.object(expert.context));
     const result = await generateObject({
-      model: agent.model,
-      system: input.system ?? agent.description,
+      model: expert.model,
+      system: input.system ?? expert.description,
       prompt: `
 <goal>
 ${input.goal}
@@ -168,7 +168,7 @@ Examples:
     id: randomId(),
     decisionId: input.decisionId ?? null,
     policy: 'shortestPath',
-    episodeId: agent.episodeId,
+    episodeId: expert.episodeId,
     goal: input.goal,
     goalState: paths[0]?.state ?? null,
     nextEvent: nextStep?.event ?? null,

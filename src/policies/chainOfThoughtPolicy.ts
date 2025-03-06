@@ -1,8 +1,8 @@
 import { generateText } from 'ai';
 import {
-  AnyAgent,
-  AgentDecideInput,
-  AgentDecision,
+  AnyExpert,
+  ExpertDecideInput,
+  ExpertDecision,
   PromptTemplate,
 } from '../types';
 import { combinePromptAndMessages } from '../text';
@@ -19,10 +19,10 @@ const chainOfThoughtPromptTemplate: PromptTemplate<any> = ({
 How would you achieve the goal? Think step-by-step.`;
 };
 
-export async function chainOfThoughtPolicy<T extends AnyAgent>(
-  agent: T,
-  input: AgentDecideInput<any>
-): Promise<AgentDecision<any> | undefined> {
+export async function chainOfThoughtPolicy<T extends AnyExpert>(
+  expert: T,
+  input: ExpertDecideInput<any>
+): Promise<ExpertDecision<any> | undefined> {
   const prompt = chainOfThoughtPromptTemplate({
     stateValue: input.state.value,
     context: input.context ?? input.state.context,
@@ -31,15 +31,15 @@ export async function chainOfThoughtPolicy<T extends AnyAgent>(
 
   const messages = combinePromptAndMessages(prompt, input.messages);
 
-  const model = input.model ? agent.wrap(input.model) : agent.model;
+  const model = input.model ? expert.wrap(input.model) : expert.model;
 
   const result = await generateText({
     model,
-    system: input.system ?? agent.description,
+    system: input.system ?? expert.description,
     messages,
   });
 
-  const decision = await toolPolicy(agent, {
+  const decision = await toolPolicy(expert, {
     ...input,
     messages: messages.concat(result.response.messages),
   });

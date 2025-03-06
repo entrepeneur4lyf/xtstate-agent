@@ -1,4 +1,4 @@
-import { createAgent, TypesFromAgent } from '..';
+import { createExpert, TypesFromExpert } from '..';
 import { assign, createActor, setup } from 'xstate';
 import { z } from 'zod';
 import { experimental_shortestPathPolicy } from './shortestPathPolicy';
@@ -6,7 +6,7 @@ import { test, expect } from 'vitest';
 import { dummyResponseValues, MockLanguageModelV1 } from '../mockModel';
 
 test.skip('should find shortest path to goal', async () => {
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'counter',
     model: new MockLanguageModelV1({
       doGenerate: async () => {
@@ -35,7 +35,7 @@ test.skip('should find shortest path to goal', async () => {
   });
 
   const counterMachine = setup({
-    types: {} as TypesFromAgent<typeof agent>,
+    types: {} as TypesFromExpert<typeof expert>,
   }).createMachine({
     initial: 'counting',
     context: { count: 0 },
@@ -62,7 +62,7 @@ test.skip('should find shortest path to goal', async () => {
 
   const counterActor = createActor(counterMachine).start();
 
-  const decision = await agent.decide({
+  const decision = await expert.decide({
     machine: counterMachine,
     model: new MockLanguageModelV1({
       defaultObjectGenerationMode: 'tool',

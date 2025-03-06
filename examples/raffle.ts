@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { assign, createActor, log, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'raffle-chooser',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.collectEntries': z.object({}).describe('Collect more entries'),
-    'agent.draw': z.object({}).describe('Draw a winner'),
-    'agent.reportWinner': z.object({
+    'expert.collectEntries': z.object({}).describe('Collect more entries'),
+    'expert.draw': z.object({}).describe('Draw a winner'),
+    'expert.reportWinner': z.object({
       winningEntry: z.string().describe('The winning entry'),
       firstRunnerUp: z.string().describe('The first runner up entry'),
       secondRunnerUp: z.string().describe('The second runner up entry'),
@@ -27,9 +27,9 @@ const machine = setup({
       lastInput: string | null;
       entries: string[];
     },
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
   },
-  actors: { agent: fromDecision(agent), getFromTerminal: fromTerminal },
+  actors: { agent: fromDecision(expert), getFromTerminal: fromTerminal },
 }).createMachine({
   context: {
     lastInput: null,
@@ -61,14 +61,14 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.collectEntries': {
+        'expert.collectEntries': {
           target: 'entering',
           actions: assign({
             entries: ({ context }) => [...context.entries, context.lastInput!],
             lastInput: null,
           }),
         },
-        'agent.draw': 'drawing',
+        'expert.draw': 'drawing',
       },
     },
     drawing: {
@@ -81,7 +81,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.reportWinner': {
+        'expert.reportWinner': {
           actions: log(
             ({ event }) =>
               `\n🎉🎉🎉 ${event.winningEntry} 🎉🎉🎉\n\n${event.explanation}`

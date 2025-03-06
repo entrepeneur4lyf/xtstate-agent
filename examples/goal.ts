@@ -1,23 +1,23 @@
 import { z } from 'zod';
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { assign, createActor, log, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'goal',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.createGoal': z.object({
+    'expert.createGoal': z.object({
       goal: z.string().describe('The goal for the conversation'),
     }),
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z.string().describe('The response from the agent'),
     }),
   },
 });
 
-const decider = fromDecision(agent);
+const decider = fromDecision(expert);
 
 const machine = setup({
   types: {
@@ -25,7 +25,7 @@ const machine = setup({
       question: string | null;
       goal: string | null;
     },
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
   },
   actors: { decider, getFromTerminal: fromTerminal },
 }).createMachine({
@@ -57,7 +57,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.createGoal': {
+        'expert.createGoal': {
           actions: [
             assign({
               goal: ({ event }) => event.goal,
@@ -78,7 +78,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.respond': {
+        'expert.respond': {
           actions: log(({ event }) => `Response: ${event.response}`),
         },
       },

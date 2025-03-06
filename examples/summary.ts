@@ -1,17 +1,17 @@
-import { createAgent, fromDecision, TypesFromAgent } from '../src';
+import { createExpert, fromDecision, TypesFromExpert } from '../src';
 import { assign, createActor, setup } from 'xstate';
 import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
 import { fromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'summarizing-chat',
   model: openai('gpt-4o'),
   events: {
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z.string().describe('The response from the agent'),
     }),
-    'agent.summarize': z.object({
+    'expert.summarize': z.object({
       summary: z.string().describe('Summary of the conversation history'),
     }),
   },
@@ -27,9 +27,9 @@ const agent = createAgent({
 });
 
 const machine = setup({
-  types: {} as TypesFromAgent<typeof agent>,
+  types: {} as TypesFromExpert<typeof expert>,
   actors: {
-    agent: fromDecision(agent),
+    agent: fromDecision(expert),
     fromTerminal,
   },
 }).createMachine({
@@ -70,7 +70,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.respond': {
+        'expert.respond': {
           actions: assign({
             messages: ({ context, event }) => [
               ...context.messages,
@@ -93,7 +93,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.summarize': {
+        'expert.summarize': {
           actions: assign({
             summary: ({ event }) => event.summary,
             messages: ({ context }) => context.messages.slice(-3), // Keep last 3 messages

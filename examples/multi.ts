@@ -1,14 +1,14 @@
-import { createAgent, fromDecision } from '../src';
+import { createExpert, fromDecision } from '../src';
 import { z } from 'zod';
 import { assign, createActor, log, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 import { openai } from '@ai-sdk/openai';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'multi',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z.string().describe('The response from the agent'),
     }),
   },
@@ -23,7 +23,7 @@ const machine = setup({
   },
   actors: {
     getFromTerminal: fromTerminal,
-    agent: fromDecision(agent),
+    agent: fromDecision(expert),
   },
 }).createMachine({
   initial: 'asking',
@@ -53,7 +53,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.respond': {
+        'expert.respond': {
           actions: [
             assign({
               discourse: ({ context, event }) =>
@@ -75,7 +75,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.respond': {
+        'expert.respond': {
           actions: [
             assign({
               discourse: ({ context, event }) =>

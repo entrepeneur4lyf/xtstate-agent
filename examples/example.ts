@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { createAgent, EventFromAgent, fromDecision, fromText } from '../src';
+import { createExpert, EventFromExpert, fromDecision, fromText } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { assign, createActor, setup } from 'xstate';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'example',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.englishSummary': z.object({
+    'expert.englishSummary': z.object({
       text: z.string().describe('The summary in English'),
     }),
-    'agent.spanishSummary': z.object({
+    'expert.spanishSummary': z.object({
       text: z.string().describe('The summary in Spanish'),
     }),
   },
@@ -18,9 +18,9 @@ const agent = createAgent({
 
 const machine = setup({
   types: {
-    events: {} as EventFromAgent<typeof agent>,
+    events: {} as EventFromExpert<typeof expert>,
   },
-  actors: { agent: fromDecision(agent), summarizer: fromText(agent) },
+  actors: { agent: fromDecision(expert), summarizer: fromText(expert) },
 }).createMachine({
   initial: 'summarizing',
   context: {

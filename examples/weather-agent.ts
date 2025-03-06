@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { createAgent } from '../src';
+import { createExpert } from '../src';
 import { assign, createActor, fromPromise, setup } from 'xstate';
 // import { anthropic } from '@ai-sdk/anthropic';
 import { fromTerminal } from './helpers/helpers';
 import { openai } from '@ai-sdk/openai';
 
 // Create the weather agent
-const agent = createAgent({
+const expert = createExpert({
   id: 'weather-agent',
   model: openai('gpt-4o'),
   events: {
@@ -17,7 +17,7 @@ const agent = createAgent({
       temperature: z.string(),
       conditions: z.string(),
     }),
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z.string(),
     }),
   },
@@ -84,7 +84,7 @@ const machine = setup({
           }),
           target: 'checking',
         },
-        'agent.respond': {
+        'expert.respond': {
           actions: ({ event }) => console.log(event.response),
           target: 'responded',
         },
@@ -105,7 +105,7 @@ const machine = setup({
     },
     responding: {
       on: {
-        'agent.respond': {
+        'expert.respond': {
           actions: ({ event }) => console.log(event.response),
           target: 'responded',
         },
@@ -122,18 +122,18 @@ const machine = setup({
 // Create and start the actor
 const actor = createActor(machine).start();
 
-agent.interact(actor, ({ state }) => {
+expert.interact(actor, ({ state }) => {
   if (state.matches('processing')) {
     return {
       goal: 'Determine if user is asking about weather and for which location. If so, get the weather. Otherwise, respond to the user.',
-      messages: agent.getMessages(),
+      messages: expert.getMessages(),
     };
   }
 
   if (state.matches('responding')) {
     return {
       goal: 'Provide a natural response about the weather in ${context.location}',
-      messages: agent.getMessages(),
+      messages: expert.getMessages(),
     };
   }
 });

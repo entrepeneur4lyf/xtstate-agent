@@ -1,9 +1,9 @@
 import { CoreToolResult, generateText } from 'ai';
 import {
-  AgentDecision,
-  AgentDecideInput,
+  ExpertDecision,
+  ExpertDecideInput,
   PromptTemplate,
-  AnyAgent,
+  AnyExpert,
 } from '../types';
 import { convertToXml, randomId } from '../utils';
 import { transition } from 'xstate';
@@ -18,11 +18,11 @@ Make at most one tool call to achieve the above goal. If the goal cannot be achi
   `.trim();
 };
 
-export async function toolPolicy<TAgent extends AnyAgent>(
-  agent: TAgent,
-  input: AgentDecideInput<TAgent>
-): Promise<AgentDecision<TAgent> | undefined> {
-  const toolMap = getToolMap(agent, input);
+export async function toolPolicy<TExpert extends AnyExpert>(
+  expert: TExpert,
+  input: ExpertDecideInput<TExpert>
+): Promise<ExpertDecision<TExpert> | undefined> {
+  const toolMap = getToolMap(expert, input);
 
   if (!toolMap) {
     // No valid transitions for the specified tools
@@ -39,7 +39,7 @@ export async function toolPolicy<TAgent extends AnyAgent>(
 
   const messages = combinePromptAndMessages(prompt, input.messages);
 
-  const model = input.model ? agent.wrap(input.model) : agent.model;
+  const model = input.model ? expert.wrap(input.model) : expert.model;
 
   const { state, machine, events, goal, model: _, ...rest } = input;
 
@@ -53,7 +53,7 @@ export async function toolPolicy<TAgent extends AnyAgent>(
 
   const result = await generateText({
     ...rest,
-    system: input.system ?? agent.description,
+    system: input.system ?? expert.description,
     model,
     messages,
     tools: toolMap,
@@ -61,7 +61,7 @@ export async function toolPolicy<TAgent extends AnyAgent>(
   });
 
   result.response.messages.forEach((m) => {
-    agent.addMessage(m);
+    expert.addMessage(m);
   });
 
   const singleResult = result.toolResults[0] as unknown as CoreToolResult<
@@ -85,7 +85,7 @@ export async function toolPolicy<TAgent extends AnyAgent>(
     goal: input.goal,
     goalState: input.state,
     nextEvent,
-    episodeId: input.episodeId ?? agent.episodeId,
+    episodeId: input.episodeId ?? expert.episodeId,
     timestamp: Date.now(),
     paths: [
       {

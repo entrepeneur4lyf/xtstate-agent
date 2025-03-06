@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { createAgent } from '../src';
+import { createExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'chatbot',
   model: openai('gpt-4o-mini'),
   events: {
@@ -14,7 +14,7 @@ const agent = createAgent({
   },
 });
 
-agent.on('decision', ({ decision }) => {
+expert.on('decision', ({ decision }) => {
   console.log(`Decision: ${decision.nextEvent?.type ?? '??'}`);
 });
 
@@ -29,16 +29,16 @@ async function main() {
     }
     switch (status) {
       case 'editing': {
-        const relevantObservations = await agent
+        const relevantObservations = await expert
           .getObservations()
           .filter((obs) => obs.prevState.value === 'editing');
-        const relevantFeedback = await agent
+        const relevantFeedback = await expert
           .getFeedback()
           .filter((f) =>
             relevantObservations.find((o) => o.decisionId === f.decisionId)
           );
 
-        const decision = await agent.decide({
+        const decision = await expert.decide({
           goal: `
 <currentState>editing</currentState>
 
@@ -79,7 +79,7 @@ Achieve the goal. Consider both exploring unknown actions (high exploration_valu
         });
 
         if (decision?.nextEvent?.type === 'submit') {
-          const observation = agent.addObservation({
+          const observation = expert.addObservation({
             decisionId: decision.id,
             prevState: { value: 'editing' },
             event: { type: 'submit' },
@@ -87,7 +87,7 @@ Achieve the goal. Consider both exploring unknown actions (high exploration_valu
           });
 
           // don't change the status; pretend submit button is broken
-          agent.addFeedback({
+          expert.addFeedback({
             decisionId: observation.id,
             reward: 0,
             comment: 'Form not submitted',
@@ -95,7 +95,7 @@ Achieve the goal. Consider both exploring unknown actions (high exploration_valu
         } else if (decision?.nextEvent?.type === 'pressEnter') {
           status = 'submitted';
 
-          await agent.addObservation({
+          await expert.addObservation({
             decisionId: decision.id,
             prevState: { value: 'editing' },
             event: { type: 'pressEnter' },
@@ -117,7 +117,7 @@ Achieve the goal. Consider both exploring unknown actions (high exploration_valu
   process.exit();
 }
 
-agent.onMessage((msg) => {
+expert.onMessage((msg) => {
   // console.log(msg.content);
 });
 main().catch(console.error);

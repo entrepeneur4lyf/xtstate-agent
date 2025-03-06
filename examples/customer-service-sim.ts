@@ -1,14 +1,14 @@
-import { createAgent, EventFromAgent, fromDecision } from '../src';
+import { createExpert, EventFromExpert, fromDecision } from '../src';
 import { assign, createActor, setup } from 'xstate';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 
 // Create customer service agent
-const customerServiceAgent = createAgent({
+const customerServiceAgent = createExpert({
   id: 'customer-service',
   model: openai('gpt-4o'),
   events: {
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z
         .string()
         .describe('The response from the customer service agent'),
@@ -18,18 +18,18 @@ const customerServiceAgent = createAgent({
 });
 
 // Create simulated customer agent
-const customerAgent = createAgent({
+const customerAgent = createExpert({
   id: 'customer',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.respond': z.object({
+    'expert.respond': z.object({
       response: z.string().describe('The response from the customer'),
     }),
-    'agent.finish': z.object({}).describe('End the conversation'),
+    'expert.finish': z.object({}).describe('End the conversation'),
   },
   description: `You are Harrison, a customer trying to get a refund for a trip to Alaska.
 You want them to give you ALL the money back. Be extremely persistent. This trip happened 5 years ago.
-If you have nothing more to add to the conversation, send agent.finish event.`,
+If you have nothing more to add to the conversation, send expert.finish event.`,
 });
 
 const machine = setup({
@@ -38,8 +38,8 @@ const machine = setup({
       messages: string[];
     },
     events: {} as
-      | EventFromAgent<typeof customerServiceAgent>
-      | EventFromAgent<typeof customerAgent>,
+      | EventFromExpert<typeof customerServiceAgent>
+      | EventFromExpert<typeof customerAgent>,
   },
   actors: {
     customerService: fromDecision(customerServiceAgent),
@@ -60,7 +60,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.respond': {
+        'expert.respond': {
           target: 'customer',
           actions: assign({
             messages: ({ context, event }) => [
@@ -80,7 +80,7 @@ const machine = setup({
         }),
       },
       on: {
-        'agent.respond': {
+        'expert.respond': {
           target: 'customerService',
           actions: assign({
             messages: ({ context, event }) => [
@@ -89,7 +89,7 @@ const machine = setup({
             ],
           }),
         },
-        'agent.finish': 'done',
+        'expert.finish': 'done',
       },
     },
     done: {

@@ -1,10 +1,10 @@
-import { createAgent, TypesFromAgent } from '../src';
+import { createExpert, TypesFromExpert } from '../src';
 import { assign, createActor, setup } from 'xstate';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { experimental_shortestPathPolicy } from '../src/policies/shortestPathPolicy';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'river-crossing-solver',
   model: openai('gpt-4'),
   events: {
@@ -45,7 +45,7 @@ const agent = createAgent({
 });
 
 const riverCrossingMachine = setup({
-  types: {} as TypesFromAgent<typeof agent>,
+  types: {} as TypesFromExpert<typeof expert>,
 }).createMachine({
   initial: 'solving',
   context: {
@@ -114,7 +114,7 @@ async function main() {
       console.log('Max tries reached');
       throw new Error('Max tries reached');
     }
-    const decision = await agent.decide({
+    const decision = await expert.decide({
       machine: riverCrossingMachine,
       goal: 'Get all items safely across the river. Remember: Cannot leave wolf with goat or goat with cabbage unattended.',
       state: riverActor.getSnapshot(),

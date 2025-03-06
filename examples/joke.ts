@@ -1,5 +1,5 @@
 import { assign, createActor, fromCallback, log, setup } from 'xstate';
-import { createAgent, fromDecision, TypesFromAgent } from '../src';
+import { createExpert, fromDecision, TypesFromExpert } from '../src';
 import { loadingAnimation } from './helpers/loader';
 import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
@@ -44,7 +44,7 @@ const loader = fromCallback(({ input }: { input: string }) => {
   };
 });
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'joke-teller',
   model: openai('gpt-4o-mini'),
   events: {
@@ -53,18 +53,18 @@ const agent = createAgent({
         topic: z.string().describe('The topic for the joke'),
       })
       .describe('Ask for a new topic, because the last joke rated 6 or lower'),
-    'agent.tellJoke': z.object({
+    'expert.tellJoke': z.object({
       joke: z.string().describe('The joke text'),
     }),
-    'agent.endJokes': z
+    'expert.endJokes': z
       .object({})
       .describe('End the jokes, since the last joke rated 7 or higher'),
-    'agent.rateJoke': z.object({
+    'expert.rateJoke': z.object({
       rating: z.number().min(1).max(10),
       explanation: z.string(),
     }),
-    'agent.continue': z.object({}).describe('Continue'),
-    'agent.markRelevancy': z.object({
+    'expert.continue': z.object({}).describe('Continue'),
+    'expert.markRelevancy': z.object({
       relevant: z.boolean().describe('Whether the joke was relevant'),
       explanation: z
         .string()
@@ -81,9 +81,9 @@ const agent = createAgent({
 });
 
 const jokeMachine = setup({
-  types: {} as TypesFromAgent<typeof agent>,
+  types: {} as TypesFromExpert<typeof expert>,
   actors: {
-    agent: fromDecision(agent),
+    agent: fromDecision(expert),
     loader,
     getFromTerminal: fromTerminal,
   },
@@ -117,7 +117,7 @@ const jokeMachine = setup({
       },
 
       on: {
-        'agent.tellJoke': {
+        'expert.tellJoke': {
           actions: [
             assign({
               jokes: ({ context, event }) => [...context.jokes, event.joke],
@@ -130,7 +130,7 @@ const jokeMachine = setup({
     },
     relevance: {
       on: {
-        'agent.markRelevancy': [
+        'expert.markRelevancy': [
           {
             guard: ({ event }) => !event.relevant,
             actions: log(
@@ -150,7 +150,7 @@ const jokeMachine = setup({
       },
 
       on: {
-        'agent.rateJoke': {
+        'expert.rateJoke': {
           actions: [
             assign({
               lastRating: ({ event }) => event.rating,
@@ -169,7 +169,7 @@ const jokeMachine = setup({
           target: 'waitingForTopic',
           actions: log("That joke wasn't good enough. Let's try again."),
         },
-        'agent.endJokes': {
+        'expert.endJokes': {
           target: 'end',
           actions: log('That joke was good enough. Goodbye!'),
         },
@@ -186,7 +186,7 @@ const jokeMachine = setup({
 
 const actor = createActor(jokeMachine);
 
-agent.interact(actor, ({ state }) => {
+expert.interact(actor, ({ state }) => {
   if (state.matches('tellingJoke')) {
     return {
       goal: 'Tell me a joke about the topic. Do not make any joke that is not relevant to the topic.',

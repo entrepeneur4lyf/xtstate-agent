@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { createAgent } from '../src';
+import { createExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { createMachine } from 'xstate';
 
-const agent = createAgent({
+const expert = createExpert({
   model: openai('gpt-4o-mini'),
   events: {
     doSomething: z.object({}).describe('Do something'),
@@ -16,7 +16,7 @@ async function main() {
       doSomething: {},
     },
   });
-  const result = await agent.decide({
+  const result = await expert.decide({
     goal: 'Do not do anything',
     state: { value: {}, context: {} },
     machine,

@@ -1,9 +1,9 @@
 import { test, expect, vi } from 'vitest';
 import {
-  AgentDecision,
-  AgentFeedbackInput,
-  createAgent,
-  TypesFromAgent,
+  ExpertDecision,
+  ExpertFeedbackInput,
+  createExpert,
+  TypesFromExpert,
 } from './';
 import { createActor, createMachine } from 'xstate';
 import { LanguageModelV1CallOptions } from 'ai';
@@ -11,55 +11,55 @@ import { z } from 'zod';
 import { dummyResponseValues, MockLanguageModelV1 } from './mockModel';
 
 test('an agent has the expected interface', () => {
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: new MockLanguageModelV1(),
   });
 
-  expect(agent.decide).toBeDefined();
+  expect(expert.decide).toBeDefined();
 
-  expect(agent.addMessage).toBeDefined();
-  expect(agent.addObservation).toBeDefined();
-  expect(agent.addFeedback).toBeDefined();
-  expect(agent.addDecision).toBeDefined();
+  expect(expert.addMessage).toBeDefined();
+  expect(expert.addObservation).toBeDefined();
+  expect(expert.addFeedback).toBeDefined();
+  expect(expert.addDecision).toBeDefined();
 
-  expect(agent.getMessages).toBeDefined();
-  expect(agent.getObservations).toBeDefined();
-  expect(agent.getFeedback).toBeDefined();
-  expect(agent.getDecisions).toBeDefined();
+  expect(expert.getMessages).toBeDefined();
+  expect(expert.getObservations).toBeDefined();
+  expect(expert.getFeedback).toBeDefined();
+  expect(expert.getDecisions).toBeDefined();
 
-  expect(agent.interact).toBeDefined();
+  expect(expert.interact).toBeDefined();
 });
 
-test('agent.addMessage() adds to message history', () => {
+test('expert.addMessage() adds to message history', () => {
   const model = new MockLanguageModelV1();
 
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model,
   });
 
-  agent.addMessage({
+  expert.addMessage({
     role: 'user',
     content: [{ type: 'text', text: 'msg 1' }],
   });
 
-  const messageHistory = agent.addMessage({
+  const messageHistory = expert.addMessage({
     role: 'assistant',
     content: [{ type: 'text', text: 'response 1' }],
   });
 
-  expect(messageHistory.episodeId).toEqual(agent.episodeId);
+  expect(messageHistory.episodeId).toEqual(expert.episodeId);
 
-  expect(agent.getMessages()).toContainEqual(
+  expect(expert.getMessages()).toContainEqual(
     expect.objectContaining({
       content: [expect.objectContaining({ text: 'msg 1' })],
     })
   );
 
-  expect(agent.getMessages()).toContainEqual(
+  expect(expert.getMessages()).toContainEqual(
     expect.objectContaining({
       content: [expect.objectContaining({ text: 'response 1' })],
       episodeId: expect.any(String),
@@ -68,8 +68,8 @@ test('agent.addMessage() adds to message history', () => {
   );
 });
 
-test('agent.addFeedback() adds to feedback', () => {
-  const agent = createAgent({
+test('expert.addFeedback() adds to feedback', () => {
+  const expert = createExpert({
     id: 'test',
     events: {
       play: z.object({
@@ -79,10 +79,10 @@ test('agent.addFeedback() adds to feedback', () => {
     model: {} as any,
   });
 
-  const decision: AgentDecision<typeof agent> = {
+  const decision: ExpertDecision<typeof expert> = {
     goal: 'Win the game',
     decisionId: null,
-    episodeId: agent.episodeId,
+    episodeId: expert.episodeId,
     goalState: { value: 'won' },
     id: 'decision-1',
     nextEvent: { type: 'play', position: 3 },
@@ -91,21 +91,21 @@ test('agent.addFeedback() adds to feedback', () => {
     timestamp: Date.now(),
   };
 
-  const obs = agent.addObservation({
+  const obs = expert.addObservation({
     decisionId: decision.id,
     prevState: { value: 'playing' },
     event: { type: 'play', position: 3 },
     state: { value: 'lost' },
   });
 
-  const feedback = agent.addFeedback({
+  const feedback = expert.addFeedback({
     reward: 0,
     decisionId: decision.id,
   });
 
-  expect(feedback.episodeId).toEqual(agent.episodeId);
+  expect(feedback.episodeId).toEqual(expert.episodeId);
 
-  expect(agent.getFeedback()).toContainEqual(
+  expect(expert.getFeedback()).toContainEqual(
     expect.objectContaining({
       reward: 0,
       decisionId: decision.id,
@@ -115,23 +115,23 @@ test('agent.addFeedback() adds to feedback', () => {
   );
 });
 
-test('agent.addObservation() adds to observations', () => {
-  const agent = createAgent({
+test('expert.addObservation() adds to observations', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  const observation = agent.addObservation({
+  const observation = expert.addObservation({
     prevState: { value: 'playing', context: {} },
     event: { type: 'play', position: 3 },
     state: { value: 'lost', context: {} },
     goal: 'Win the game',
   });
 
-  expect(observation.episodeId).toEqual(agent.episodeId);
+  expect(observation.episodeId).toEqual(expert.episodeId);
 
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       prevState: { value: 'playing', context: {} },
       event: { type: 'play', position: 3 },
@@ -142,21 +142,21 @@ test('agent.addObservation() adds to observations', () => {
   );
 });
 
-test('agent.addObservation() adds to observations (initial state)', () => {
-  const agent = createAgent({
+test('expert.addObservation() adds to observations (initial state)', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  const observation = agent.addObservation({
+  const observation = expert.addObservation({
     state: { value: 'lost' },
     goal: 'Win the game',
   });
 
-  expect(observation.episodeId).toEqual(agent.episodeId);
+  expect(observation.episodeId).toEqual(expert.episodeId);
 
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       state: { value: 'lost', context: undefined },
       episodeId: expect.any(String),
@@ -165,8 +165,8 @@ test('agent.addObservation() adds to observations (initial state)', () => {
   );
 });
 
-test.skip('agent.addObservation() adds to observations with machine hash', () => {
-  const agent = createAgent({
+test.skip('expert.addObservation() adds to observations with machine hash', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
@@ -184,16 +184,16 @@ test.skip('agent.addObservation() adds to observations with machine hash', () =>
     },
   });
 
-  const observation = agent.addObservation({
+  const observation = expert.addObservation({
     prevState: { value: 'playing', context: {} },
     event: { type: 'play', position: 3 },
     state: { value: 'lost', context: {} },
     goal: 'Win the game',
   });
 
-  expect(observation.episodeId).toEqual(agent.episodeId);
+  expect(observation.episodeId).toEqual(expert.episodeId);
 
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       prevState: { value: 'playing', context: {} },
       event: { type: 'play', position: 3 },
@@ -204,30 +204,30 @@ test.skip('agent.addObservation() adds to observations with machine hash', () =>
   );
 });
 
-test('agent.addInsight() adds to insights (with observation)', () => {
-  const agent = createAgent({
+test('expert.addInsight() adds to insights (with observation)', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  const observation = agent.addObservation({
+  const observation = expert.addObservation({
     state: {
       value: 'playing',
     },
     goal: 'Win the game',
   });
 
-  const insight = agent.addInsight({
+  const insight = expert.addInsight({
     observationId: observation.id,
     attributes: {
       advantage: 50,
     },
   });
 
-  expect(insight.episodeId).toEqual(agent.episodeId);
+  expect(insight.episodeId).toEqual(expert.episodeId);
 
-  expect(agent.getInsights()).toContainEqual(
+  expect(expert.getInsights()).toContainEqual(
     expect.objectContaining({
       attributes: { advantage: 50 },
       observationId: observation.id,
@@ -235,7 +235,7 @@ test('agent.addInsight() adds to insights (with observation)', () => {
       timestamp: expect.any(Number),
     })
   );
-  expect(agent.getInsights()).toContainEqual(
+  expect(expert.getInsights()).toContainEqual(
     expect.objectContaining({
       attributes: { advantage: 50 },
       observationId: observation.id,
@@ -245,7 +245,7 @@ test('agent.addInsight() adds to insights (with observation)', () => {
   );
 });
 
-test('agent.interact() observes machine actors (no 2nd arg)', () => {
+test('expert.interact() observes machine actors (no 2nd arg)', () => {
   const machine = createMachine({
     initial: 'a',
     states: {
@@ -256,7 +256,7 @@ test('agent.interact() observes machine actors (no 2nd arg)', () => {
     },
   });
 
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
@@ -264,17 +264,17 @@ test('agent.interact() observes machine actors (no 2nd arg)', () => {
 
   const actor = createActor(machine);
 
-  agent.interact(actor);
+  expert.interact(actor);
 
   actor.start();
 
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       prevState: undefined,
       state: expect.objectContaining({ value: 'a' }),
     })
   );
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       prevState: undefined,
       state: expect.objectContaining({ value: 'a' }),
@@ -283,7 +283,7 @@ test('agent.interact() observes machine actors (no 2nd arg)', () => {
 
   actor.send({ type: 'NEXT' });
 
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       prevState: expect.objectContaining({ value: 'a' }),
       event: { type: 'NEXT' },
@@ -294,15 +294,15 @@ test('agent.interact() observes machine actors (no 2nd arg)', () => {
 
 test('You can listen for feedback events', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  agent.onFeedback(fn);
+  expert.onFeedback(fn);
 
-  agent.addFeedback({
+  expert.addFeedback({
     reward: 1,
     decisionId: 'dec-1',
     comment: 'Good move',
@@ -345,7 +345,7 @@ test('You can listen for decision events', async () => {
     },
   });
 
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     model,
     events: {
@@ -353,9 +353,9 @@ test('You can listen for decision events', async () => {
     },
   });
 
-  agent.on('decision', fn);
+  expert.on('decision', fn);
 
-  await agent.decide({
+  await expert.decide({
     goal: 'Win the game',
     state: {
       value: 'playing',
@@ -387,8 +387,8 @@ test('You can listen for decision events', async () => {
   );
 });
 
-test('agent.types provides context and event types', () => {
-  const agent = createAgent({
+test('expert.types provides context and event types', () => {
+  const expert = createExpert({
     model: {} as any,
     events: {
       setScore: z.object({
@@ -400,7 +400,7 @@ test('agent.types provides context and event types', () => {
     },
   });
 
-  let types = {} as TypesFromAgent<typeof agent>;
+  let types = {} as TypesFromExpert<typeof expert>;
 
   types satisfies { context: any; events: any };
 
@@ -411,14 +411,14 @@ test('agent.types provides context and event types', () => {
 });
 
 test('It allows unrecognized events', () => {
-  const agent = createAgent({
+  const expert = createExpert({
     model: {} as any,
     events: {},
     context: {},
   });
 
   expect(() => {
-    agent.send({
+    expert.send({
       // @ts-expect-error
       type: 'unrecognized',
     });
@@ -427,20 +427,20 @@ test('It allows unrecognized events', () => {
 
 test('You can listen for message events', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  agent.onMessage(fn);
+  expert.onMessage(fn);
 
   const message = {
     role: 'user' as const,
     content: [{ type: 'text' as const, text: 'test message' }],
   };
 
-  agent.addMessage(message);
+  expert.addMessage(message);
 
   expect(fn).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -452,16 +452,16 @@ test('You can listen for message events', () => {
   );
 });
 
-test('agent.getDecisions() returns decisions from context', () => {
-  const agent = createAgent({
+test('expert.getDecisions() returns decisions from context', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
-    policy: async (agent) => {
+    policy: async (expert) => {
       return {
         id: Date.now().toString(),
         decisionId: null,
-        episodeId: agent.episodeId,
+        episodeId: expert.episodeId,
         policy: 'test-policy',
         goal: '',
         goalState: null,
@@ -477,7 +477,7 @@ test('agent.getDecisions() returns decisions from context', () => {
     },
   });
 
-  const decisions = agent.getDecisions();
+  const decisions = expert.getDecisions();
 
   expect(decisions).toBeDefined();
   expect(Array.isArray(decisions)).toBe(true);
@@ -485,15 +485,15 @@ test('agent.getDecisions() returns decisions from context', () => {
 
 test('Event listeners can be unsubscribed', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  const subscription = agent.on('message', fn);
+  const subscription = expert.on('message', fn);
 
-  agent.addMessage({
+  expert.addMessage({
     role: 'user',
     content: [{ type: 'text', text: 'first message' }],
   });
@@ -502,7 +502,7 @@ test('Event listeners can be unsubscribed', () => {
 
   subscription.unsubscribe();
 
-  agent.addMessage({
+  expert.addMessage({
     role: 'user',
     content: [{ type: 'text', text: 'second message' }],
   });
@@ -510,7 +510,7 @@ test('Event listeners can be unsubscribed', () => {
   expect(fn).toHaveBeenCalledTimes(1); // Still only called once
 });
 
-test('agent.observe() adds observations from actor snapshots', () => {
+test('expert.observe() adds observations from actor snapshots', () => {
   const machine = createMachine({
     initial: 'idle',
     states: {
@@ -521,25 +521,25 @@ test('agent.observe() adds observations from actor snapshots', () => {
     },
   });
 
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
   const actor = createActor(machine);
-  const subscription = agent.observe(actor);
+  const subscription = expert.observe(actor);
 
   actor.start();
   actor.send({ type: 'START' });
 
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       state: expect.objectContaining({ value: 'idle' }),
     })
   );
 
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       prevState: expect.objectContaining({ value: 'idle' }),
       event: { type: 'START' },
@@ -550,87 +550,87 @@ test('agent.observe() adds observations from actor snapshots', () => {
   subscription.unsubscribe();
 });
 
-test('agent.addObservation() accepts custom episodeId', () => {
-  const agent = createAgent({
+test('expert.addObservation() accepts custom episodeId', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
   const customEpisodeId = 'custom-episode-123';
-  const observation = agent.addObservation({
+  const observation = expert.addObservation({
     state: { value: 'playing' },
     goal: 'Win the game',
     episodeId: customEpisodeId,
   });
 
   expect(observation.episodeId).toEqual(customEpisodeId);
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       episodeId: customEpisodeId,
     })
   );
 });
 
-test('agent.addFeedback() accepts custom episodeId', () => {
-  const agent = createAgent({
+test('expert.addFeedback() accepts custom episodeId', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
   const customEpisodeId = 'custom-episode-123';
-  const feedback = agent.addFeedback({
+  const feedback = expert.addFeedback({
     reward: 1,
     decisionId: 'dec-1',
     episodeId: customEpisodeId,
   });
 
   expect(feedback.episodeId).toEqual(customEpisodeId);
-  expect(agent.getFeedback()).toContainEqual(
+  expect(expert.getFeedback()).toContainEqual(
     expect.objectContaining({
       episodeId: customEpisodeId,
     })
   );
 });
 
-test('agent.addObservation() accepts decisionId', () => {
-  const agent = createAgent({
+test('expert.addObservation() accepts decisionId', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
   const decisionId = 'decision-123';
-  const observation = agent.addObservation({
+  const observation = expert.addObservation({
     state: { value: 'playing' },
     goal: 'Win the game',
     decisionId,
   });
 
   expect(observation.decisionId).toEqual(decisionId);
-  expect(agent.getObservations()).toContainEqual(
+  expect(expert.getObservations()).toContainEqual(
     expect.objectContaining({
       decisionId,
     })
   );
 });
 
-test('agent.addFeedback() accepts decisionId', () => {
-  const agent = createAgent({
+test('expert.addFeedback() accepts decisionId', () => {
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
   const decisionId = 'decision-123';
-  const feedback = agent.addFeedback({
+  const feedback = expert.addFeedback({
     reward: 1,
     decisionId,
   });
 
   expect(feedback.decisionId).toEqual(decisionId);
-  expect(agent.getFeedback()).toContainEqual(
+  expect(expert.getFeedback()).toContainEqual(
     expect.objectContaining({
       decisionId,
     })
@@ -639,15 +639,15 @@ test('agent.addFeedback() accepts decisionId', () => {
 
 test('You can listen for observation events', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  agent.onObservation(fn);
+  expert.onObservation(fn);
 
-  agent.addObservation({
+  expert.addObservation({
     state: { value: 'playing' },
     goal: 'Win the game',
   });
@@ -663,7 +663,7 @@ test('You can listen for observation events', () => {
 
 test('You can listen for decision events', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {
       MOVE: z.object({}),
@@ -671,26 +671,26 @@ test('You can listen for decision events', () => {
     model: {} as any,
   });
 
-  agent.onDecision(fn);
+  expert.onDecision(fn);
 
   const decision = {
     id: 'decision-1',
     decisionId: null,
-    episodeId: agent.episodeId,
+    episodeId: expert.episodeId,
     policy: 'test-policy',
     goal: 'Win the game',
     goalState: { value: 'won' },
     paths: [],
     nextEvent: { type: 'MOVE' },
     timestamp: Date.now(),
-  } satisfies AgentDecision<typeof agent>;
+  } satisfies ExpertDecision<typeof expert>;
 
-  agent.addDecision(decision);
+  expert.addDecision(decision);
 
   expect(fn).toHaveBeenCalledWith(
     expect.objectContaining({
       id: 'decision-1',
-      episodeId: agent.episodeId,
+      episodeId: expert.episodeId,
       policy: 'test-policy',
       goal: 'Win the game',
       nextEvent: { type: 'MOVE' },
@@ -700,15 +700,15 @@ test('You can listen for decision events', () => {
 
 test('Event listeners can be unsubscribed (onObservation)', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  const subscription = agent.onObservation(fn);
+  const subscription = expert.onObservation(fn);
 
-  agent.addObservation({
+  expert.addObservation({
     state: { value: 'playing' },
     goal: 'Win the game',
   });
@@ -717,7 +717,7 @@ test('Event listeners can be unsubscribed (onObservation)', () => {
 
   subscription.unsubscribe();
 
-  agent.addObservation({
+  expert.addObservation({
     state: { value: 'playing' },
     goal: 'Win the game again',
   });
@@ -727,7 +727,7 @@ test('Event listeners can be unsubscribed (onObservation)', () => {
 
 test('Event listeners can be unsubscribed (onDecision)', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {
       MOVE: z.object({}),
@@ -735,27 +735,27 @@ test('Event listeners can be unsubscribed (onDecision)', () => {
     model: {} as any,
   });
 
-  const subscription = agent.onDecision(fn);
+  const subscription = expert.onDecision(fn);
 
   const decision = {
     id: 'decision-1',
     decisionId: null,
-    episodeId: agent.episodeId,
+    episodeId: expert.episodeId,
     policy: 'test-policy',
     goal: 'Win the game',
     goalState: { value: 'won' },
     paths: [],
     nextEvent: { type: 'MOVE' },
     timestamp: Date.now(),
-  } satisfies AgentDecision<typeof agent>;
+  } satisfies ExpertDecision<typeof expert>;
 
-  agent.addDecision(decision);
+  expert.addDecision(decision);
 
   expect(fn).toHaveBeenCalledTimes(1);
 
   subscription.unsubscribe();
 
-  agent.addDecision({
+  expert.addDecision({
     ...decision,
     id: 'decision-2',
   });
@@ -765,15 +765,15 @@ test('Event listeners can be unsubscribed (onDecision)', () => {
 
 test('Event listeners can be unsubscribed (onFeedback)', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  const subscription = agent.onFeedback(fn);
+  const subscription = expert.onFeedback(fn);
 
-  agent.addFeedback({
+  expert.addFeedback({
     reward: 1,
     decisionId: 'dec-1',
   });
@@ -782,7 +782,7 @@ test('Event listeners can be unsubscribed (onFeedback)', () => {
 
   subscription.unsubscribe();
 
-  agent.addFeedback({
+  expert.addFeedback({
     reward: 0,
     decisionId: 'dec-2',
   });
@@ -792,16 +792,16 @@ test('Event listeners can be unsubscribed (onFeedback)', () => {
 
 test('Feedback events include optional fields', () => {
   const fn = vi.fn();
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
   });
 
-  agent.onFeedback(fn);
+  expert.onFeedback(fn);
 
   // Test with minimal feedback
-  agent.addFeedback({
+  expert.addFeedback({
     reward: 1,
     decisionId: 'dec-1',
   });
@@ -818,12 +818,12 @@ test('Feedback events include optional fields', () => {
   );
 
   // Test with all optional fields
-  agent.addFeedback({
+  expert.addFeedback({
     reward: 0,
     decisionId: 'dec-2',
     comment: 'Could be better',
     attributes: { reason: 'suboptimal' },
-  } satisfies AgentFeedbackInput);
+  } satisfies ExpertFeedbackInput);
 
   expect(fn).toHaveBeenLastCalledWith(
     expect.objectContaining({
@@ -841,16 +841,16 @@ test('Feedback events maintain episodeId consistency', () => {
   const fn = vi.fn();
   const customEpisodeId = 'custom-episode-123';
 
-  const agent = createAgent({
+  const expert = createExpert({
     id: 'test',
     events: {},
     model: {} as any,
     episodeId: customEpisodeId,
   });
 
-  agent.onFeedback(fn);
+  expert.onFeedback(fn);
 
-  agent.addFeedback({
+  expert.addFeedback({
     reward: 1,
     decisionId: 'dec-1',
   });
@@ -863,7 +863,7 @@ test('Feedback events maintain episodeId consistency', () => {
 
   // Test with explicit different episodeId
   const differentEpisodeId = 'different-episode-456';
-  agent.addFeedback({
+  expert.addFeedback({
     reward: 0,
     decisionId: 'dec-2',
     episodeId: differentEpisodeId,

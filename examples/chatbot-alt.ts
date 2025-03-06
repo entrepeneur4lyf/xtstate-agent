@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { createAgent } from '../src';
+import { createExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { getFromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'chatbot',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.respond': z.object({
-      response: z.string().describe('The response from the agent'),
+    'expert.respond': z.object({
+      response: z.string().describe('The response from the expert'),
     }),
-    'agent.endConversation': z.object({}).describe('Stop the conversation'),
+    'expert.endConversation': z.object({}).describe('Stop the conversation'),
   },
   context: {
     userMessage: z.string(),
@@ -29,8 +29,8 @@ async function main() {
         break;
 
       case 'responding':
-        const decision = await agent.decide({
-          messages: agent.getMessages(),
+        const decision = await expert.decide({
+          messages: expert.getMessages(),
           goal: 'Respond to the user, unless they want to end the conversation.',
           state: {
             value: status,
@@ -40,10 +40,10 @@ async function main() {
           },
         });
 
-        if (decision?.nextEvent?.type === 'agent.respond') {
+        if (decision?.nextEvent?.type === 'expert.respond') {
           console.log(`Agent: ${decision.nextEvent.response}`);
           status = 'listening';
-        } else if (decision?.nextEvent?.type === 'agent.endConversation') {
+        } else if (decision?.nextEvent?.type === 'expert.endConversation') {
           status = 'finished';
         }
         break;

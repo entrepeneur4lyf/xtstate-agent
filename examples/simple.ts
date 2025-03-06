@@ -1,14 +1,14 @@
-import { createAgent, fromDecision } from '../src';
+import { createExpert, fromDecision } from '../src';
 import { z } from 'zod';
 import { setup, createActor, createMachine } from 'xstate';
 import { openai } from '@ai-sdk/openai';
 import { chainOfThoughtPolicy } from '../src/policies/chainOfThoughtPolicy';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'simple',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.thought': z.object({
+    'expert.thought': z.object({
       text: z.string().describe('The text of the thought'),
     }),
   },
@@ -19,7 +19,7 @@ const machine = createMachine({
   states: {
     thinking: {
       on: {
-        'agent.thought': {
+        'expert.thought': {
           actions: ({ event }) => console.log(event.text),
           target: 'thought',
         },
@@ -33,9 +33,9 @@ const machine = createMachine({
 
 const actor = createActor(machine).start();
 
-agent.onMessage(console.log);
+expert.onMessage(console.log);
 
-agent.interact(actor, (obs) => {
+expert.interact(actor, (obs) => {
   if (obs.state.matches('thinking')) {
     return {
       goal: 'Think about a random topic, and then share that thought.',

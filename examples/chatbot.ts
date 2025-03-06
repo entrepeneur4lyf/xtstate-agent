@@ -1,17 +1,17 @@
 import { z } from 'zod';
-import { createAgent, fromDecision, TypesFromAgent } from '../src';
+import { createExpert, fromDecision, TypesFromExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { assign, createActor, log, setup } from 'xstate';
 import { fromTerminal, getFromTerminal } from './helpers/helpers';
 
-const agent = createAgent({
+const expert = createExpert({
   id: 'chatbot',
   model: openai('gpt-4o-mini'),
   events: {
-    'agent.respond': z.object({
-      response: z.string().describe('The response from the agent'),
+    'expert.respond': z.object({
+      response: z.string().describe('The response from the expert'),
     }),
-    'agent.endConversation': z.object({}).describe('Stop the conversation'),
+    'expert.endConversation': z.object({}).describe('Stop the conversation'),
   },
   context: {
     userMessage: z.string(),
@@ -19,7 +19,7 @@ const agent = createAgent({
 });
 
 const machine = setup({
-  types: {} as TypesFromAgent<typeof agent>,
+  types: {} as TypesFromExpert<typeof expert>,
   actors: { getFromTerminal: fromTerminal },
 }).createMachine({
   initial: 'listening',
@@ -41,11 +41,11 @@ const machine = setup({
     },
     responding: {
       on: {
-        'agent.respond': {
+        'expert.respond': {
           actions: log(({ event }) => `Agent: ${event.response}`),
           target: 'listening',
         },
-        'agent.endConversation': 'finished',
+        'expert.endConversation': 'finished',
       },
     },
     finished: {
@@ -60,11 +60,11 @@ const machine = setup({
 
 const actor = createActor(machine).start();
 
-agent.interact(actor, (s) => {
+expert.interact(actor, (s) => {
   if (s.state.matches('responding')) {
     return {
       goal: 'Respond to the user, unless they want to end the conversation.',
-      messages: agent.getMessages(),
+      messages: expert.getMessages(),
     };
   }
 });

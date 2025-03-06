@@ -5,7 +5,7 @@
 import { tavily } from '@tavily/core';
 
 import { assign, createActor, fromPromise, setup } from 'xstate';
-import { createAgent } from '../src';
+import { createExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { generateObject } from 'ai';
@@ -18,7 +18,7 @@ interface AgentState {
   revisionCount: number;
 }
 
-const agent = createAgent({
+const expert = createExpert({
   model: openai('gpt-4o-mini'),
   events: {},
 });
@@ -38,7 +38,7 @@ async function curate(
   input: Pick<AgentState, 'topic' | 'searchResults'>
 ): Promise<string> {
   const response = await generateObject({
-    model: agent.model,
+    model: expert.model,
     system: `
 You are a personal newspaper editor. 
 Your sole task is to return a list of URLs of the 5 most relevant articles for the provided topic or query as a JSON list of strings.`.trim(),
@@ -72,7 +72,7 @@ async function critique(
   }
 
   const response = await generateObject({
-    model: agent.model,
+    model: expert.model,
     system: `
   You are a personal newspaper writing critique. 
   Your sole purpose is to provide short feedback on a written article so the writer will know what to fix.
@@ -102,7 +102,7 @@ async function write(
   input: Pick<AgentState, 'searchResults' | 'topic'>
 ): Promise<string> {
   const response = await generateObject({
-    model: agent.model,
+    model: expert.model,
     system:
       `You are a personal newspaper writer. Your sole purpose is to write a well-written article about a 
         topic using a list of articles. Write 5 paragraphs in markdown.`.replace(
@@ -132,7 +132,7 @@ async function revise(
   input: Pick<AgentState, 'article' | 'critique'>
 ): Promise<string> {
   const response = await generateObject({
-    model: agent.model,
+    model: expert.model,
     system:
       `You are a personal newspaper editor. Your sole purpose is to edit a well-written article about a 
       topic based on given critique.`.replace(/\s+/g, ' '),

@@ -3,13 +3,13 @@ import {
   LanguageModelV1StreamPart,
 } from 'ai';
 import {
-  AnyAgent,
+  AnyExpert,
   LanguageModelV1TextPart,
   LanguageModelV1ToolCallPart,
 } from './types';
 import { randomId } from './utils';
 
-export function createAgentMiddleware(agent: AnyAgent) {
+export function createAgentMiddleware(expert: AnyExpert) {
   const middleware: LanguageModelV1Middleware = {
     transformParams: async ({ params }) => {
       return params;
@@ -18,7 +18,7 @@ export function createAgentMiddleware(agent: AnyAgent) {
       const id = randomId();
 
       params.prompt.forEach((message) => {
-        agent.addMessage({
+        expert.addMessage({
           id,
           ...message,
           timestamp: Date.now(),
@@ -35,7 +35,7 @@ export function createAgentMiddleware(agent: AnyAgent) {
 
       params.prompt.forEach((message) => {
         message.content;
-        agent.addMessage({
+        expert.addMessage({
           id,
           ...message,
           timestamp: Date.now(),
@@ -71,7 +71,7 @@ export function createAgentMiddleware(agent: AnyAgent) {
             });
           }
 
-          agent.addMessage({
+          expert.addMessage({
             id: randomId(),
             timestamp: Date.now(),
             role: 'assistant',
