@@ -4,7 +4,7 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 
 // Create customer service expert
-const customerServiceAgent = createExpert({
+const customerServiceExpert = createExpert({
   id: 'customer-service',
   model: openai('gpt-4o'),
   events: {
@@ -18,7 +18,7 @@ const customerServiceAgent = createExpert({
 });
 
 // Create simulated customer expert
-const customerAgent = createExpert({
+const customerExpert = createExpert({
   id: 'customer',
   model: openai('gpt-4o-mini'),
   events: {
@@ -38,12 +38,12 @@ const machine = setup({
       messages: string[];
     },
     events: {} as
-      | EventFromExpert<typeof customerServiceAgent>
-      | EventFromExpert<typeof customerAgent>,
+      | EventFromExpert<typeof customerServiceExpert>
+      | EventFromExpert<typeof customerExpert>,
   },
   actors: {
-    customerService: fromDecision(customerServiceAgent),
-    customer: fromDecision(customerAgent),
+    customerService: fromDecision(customerServiceExpert),
+    customer: fromDecision(customerExpert),
   },
 }).createMachine({
   initial: 'customerService',

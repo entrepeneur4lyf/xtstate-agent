@@ -1,7 +1,7 @@
 import { assign, createActor, log, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
 import {
-  ContextFromAgent,
+  ContextFromExpert,
   createExpert,
   fromDecision,
   TypesFromExpert,
@@ -41,7 +41,7 @@ const context = {
   word: null,
   guessedWord: null,
   lettersGuessed: [],
-} satisfies ContextFromAgent<typeof expert>;
+} satisfies ContextFromExpert<typeof expert>;
 
 const wordGuesserMachine = setup({
   types: {} as TypesFromExpert<typeof expert>,

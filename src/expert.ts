@@ -35,7 +35,7 @@ import {
   LanguageModel,
   LanguageModelV1,
 } from 'ai';
-import { createAgentMiddleware } from './middleware';
+import { createExpertMiddleware } from './middleware';
 
 export const expertLogic: ExpertLogic<any> = fromTransition(
   (state, event, { emit }) => {
@@ -119,7 +119,7 @@ export function createExpert<
    *
    * @example
    * ```ts
-   * const expert = createAgent({
+   * const expert = createExpert({
    *  id: 'recipe-assistant',
    *  // ...
    * });
@@ -559,12 +559,12 @@ export class Expert<
   public wrap(modelToWrap: LanguageModelV1) {
     return wrapLanguageModel({
       model: modelToWrap,
-      middleware: createAgentMiddleware(this),
+      middleware: createExpertMiddleware(this),
     });
   }
 
   /**
-   * Resolves with an `AgentDecision` based on the information provided in the `options`, including:
+   * Resolves with an `ExpertDecision` based on the information provided in the `options`, including:
    *
    * - The `goal` for the expert to achieve
    * - The observed current `state`

@@ -1,6 +1,6 @@
-# Stately Agent
+# Stately Expert
 
-Stately Agent is a flexible framework for building AI agents using state machines. Stately agents go beyond normal LLM-based AI agents by:
+Stately Expert is a flexible framework for building AI agents using state machines. Stately agents go beyond normal LLM-based AI agents by:
 
 - Using state machines to guide the agent's behavior, powered by [XState](https://stately.ai/docs/xstate)
 - Incorporating **observations**, **message history**, and **feedback** to the agent decision-making and text-generation processes, as needed
@@ -9,13 +9,13 @@ Stately Agent is a flexible framework for building AI agents using state machine
 
 **Read the documentation: [stately.ai/docs/agents](https://stately.ai/docs/agents)**
 
-# Stately Agent
+# Stately Expert
 
-Stately Agent is a framework for building intelligent AI agents that are guided by state machines and learn from experience. Rather than relying solely on LLM responses, agents use structured observations, feedback, and insights to make informed decisions and improve over time.
+Stately Expert is a framework for building intelligent AI agents that are guided by state machines and learn from experience. Rather than relying solely on LLM responses, agents use structured observations, feedback, and insights to make informed decisions and improve over time.
 
 ## Overview
 
-Stately Agent combines state machines with reinforcement learning concepts to create agents that:
+Stately Expert combines state machines with reinforcement learning concepts to create agents that:
 
 - Make decisions based on clear state transitions and goals
 - Learn from past experiences and feedback
@@ -52,13 +52,13 @@ The framework is built on [XState](https://stately.ai/docs/xstate) for state mac
 
 TODO
 
-## Why Stately Agent?
+## Why Stately Expert?
 
-Traditional LLM-based agents often make decisions with limited context and no ability to learn from experience. Stately Agent provides:
+Traditional LLM-based agents often make decisions with limited context and no ability to learn from experience. Stately Expert provides:
 
 1. **Structured Decision Making**: State machines provide clear boundaries and valid transitions
 
-2. **Learning from Experience**: Agents improve through feedback and observations
+2. **Learning from Experience**: Experts improve through feedback and observations
 
 3. **Contextual Awareness**: Insights and observations inform better decisions
 

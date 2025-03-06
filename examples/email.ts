@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ContextFromAgent, createExpert, EventFromExpert } from '../src';
+import { ContextFromExpert, createExpert, EventFromExpert } from '../src';
 import { openai } from '@ai-sdk/openai';
 import { assign, createActor, setup } from 'xstate';
 import { fromTerminal } from './helpers/helpers';
@@ -34,7 +34,7 @@ const machine = setup({
       email: string;
       instructions: string;
     },
-    context: {} as ContextFromAgent<typeof expert>,
+    context: {} as ContextFromExpert<typeof expert>,
   },
   actors: { getFromTerminal: fromTerminal },
 }).createMachine({

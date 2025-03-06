@@ -9,7 +9,7 @@ import {
 } from './types';
 import { randomId } from './utils';
 
-export function createAgentMiddleware(expert: AnyExpert) {
+export function createExpertMiddleware(expert: AnyExpert) {
   const middleware: LanguageModelV1Middleware = {
     transformParams: async ({ params }) => {
       return params;

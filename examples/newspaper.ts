@@ -10,7 +10,7 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { generateObject } from 'ai';
 
-interface AgentState {
+interface ExpertState {
   topic: string;
   searchResults?: string;
   article?: string;
@@ -25,7 +25,7 @@ const expert = createExpert({
 
 async function search({
   topic,
-}: Pick<AgentState, 'topic'>): Promise<string | undefined> {
+}: Pick<ExpertState, 'topic'>): Promise<string | undefined> {
   const tvly = tavily({
     apiKey: process.env.TAVILY_API_KEY,
   });
@@ -35,7 +35,7 @@ async function search({
 }
 
 async function curate(
-  input: Pick<AgentState, 'topic' | 'searchResults'>
+  input: Pick<ExpertState, 'topic' | 'searchResults'>
 ): Promise<string> {
   const response = await generateObject({
     model: expert.model,
@@ -60,7 +60,7 @@ ${input.searchResults}`.trim(),
 }
 
 async function critique(
-  input: Pick<AgentState, 'article' | 'critique'>
+  input: Pick<ExpertState, 'article' | 'critique'>
 ): Promise<string | undefined> {
   let feedbackInstructions = '';
   if (input.critique) {
@@ -99,7 +99,7 @@ async function critique(
 }
 
 async function write(
-  input: Pick<AgentState, 'searchResults' | 'topic'>
+  input: Pick<ExpertState, 'searchResults' | 'topic'>
 ): Promise<string> {
   const response = await generateObject({
     model: expert.model,
@@ -129,7 +129,7 @@ async function write(
   return content;
 }
 async function revise(
-  input: Pick<AgentState, 'article' | 'critique'>
+  input: Pick<ExpertState, 'article' | 'critique'>
 ): Promise<string> {
   const response = await generateObject({
     model: expert.model,
@@ -155,29 +155,29 @@ async function revise(
 
 const machine = setup({
   types: {
-    context: {} as AgentState,
+    context: {} as ExpertState,
   },
   actors: {
-    search: fromPromise(({ input }: { input: Pick<AgentState, 'topic'> }) => {
+    search: fromPromise(({ input }: { input: Pick<ExpertState, 'topic'> }) => {
       return search(input);
     }),
     curate: fromPromise(
-      ({ input }: { input: Pick<AgentState, 'topic' | 'searchResults'> }) => {
+      ({ input }: { input: Pick<ExpertState, 'topic' | 'searchResults'> }) => {
         return curate(input);
       }
     ),
     critique: fromPromise(
-      ({ input }: { input: Pick<AgentState, 'article' | 'critique'> }) => {
+      ({ input }: { input: Pick<ExpertState, 'article' | 'critique'> }) => {
         return critique(input);
       }
     ),
     write: fromPromise(
-      ({ input }: { input: Pick<AgentState, 'searchResults' | 'topic'> }) => {
+      ({ input }: { input: Pick<ExpertState, 'searchResults' | 'topic'> }) => {
         return write(input);
       }
     ),
     revise: fromPromise(
-      ({ input }: { input: Pick<AgentState, 'article' | 'critique'> }) => {
+      ({ input }: { input: Pick<ExpertState, 'article' | 'critique'> }) => {
         return revise(input);
       }
     ),

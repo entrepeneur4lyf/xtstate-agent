@@ -82,7 +82,7 @@ const machine = setup({
               actions: [
                 assign({
                   conversation: ({ context, event }) =>
-                    context.conversation.concat(`Agent: ` + event.response),
+                    context.conversation.concat(`Expert: ` + event.response),
                 }),
                 log(({ event }) => event.response),
               ],

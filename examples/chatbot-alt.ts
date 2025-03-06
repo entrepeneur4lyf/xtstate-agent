@@ -41,7 +41,7 @@ async function main() {
         });
 
         if (decision?.nextEvent?.type === 'expert.respond') {
-          console.log(`Agent: ${decision.nextEvent.response}`);
+          console.log(`Expert: ${decision.nextEvent.response}`);
           status = 'listening';
         } else if (decision?.nextEvent?.type === 'expert.endConversation') {
           status = 'finished';

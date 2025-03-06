@@ -42,7 +42,7 @@ const machine = setup({
     responding: {
       on: {
         'expert.respond': {
-          actions: log(({ event }) => `Agent: ${event.response}`),
+          actions: log(({ event }) => `Expert: ${event.response}`),
           target: 'listening',
         },
         'expert.endConversation': 'finished',

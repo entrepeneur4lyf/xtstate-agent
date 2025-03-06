@@ -14,7 +14,7 @@ import { getTransitions } from './utils';
 import { CoreTool, generateText, LanguageModel, tool } from 'ai';
 import { ZodEventMapping } from './schemas';
 
-export type AgentDecideLogicInput = {
+export type ExpertDecideLogicInput = {
   goal: string;
   model?: LanguageModel;
   context?: Record<string, any>;
@@ -22,7 +22,7 @@ export type AgentDecideLogicInput = {
 
 export type MachineDecisionLogic<TExpert extends AnyExpert> = PromiseActorLogic<
   ExpertDecision<TExpert> | undefined,
-  AgentDecideLogicInput | string
+  ExpertDecideLogicInput | string
 >;
 
 export function fromDecision<TExpert extends AnyExpert>(

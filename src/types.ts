@@ -425,7 +425,7 @@ export interface ObservedState<TExpert extends AnyExpert> {
   /**
    * Additional contextual data related to the current state
    */
-  context?: ContextFromAgent<TExpert>;
+  context?: ContextFromExpert<TExpert>;
 }
 
 export type ObservedStateFrom<TActor extends ActorRefLike> = Pick<
@@ -462,7 +462,7 @@ export type TypesFromExpert<T extends AnyExpert> = T extends Expert<
     }
   : never;
 
-export type ContextFromAgent<T extends AnyExpert> = T extends Expert<
+export type ContextFromExpert<T extends AnyExpert> = T extends Expert<
   infer TContextSchema,
   infer _TEventSchema
 >

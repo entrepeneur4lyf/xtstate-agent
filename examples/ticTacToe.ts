@@ -1,7 +1,7 @@
 import { assign, setup, assertEvent, createActor } from 'xstate';
 import { z } from 'zod';
 import {
-  ContextFromAgent,
+  ContextFromExpert,
   createExpert,
   EventFromExpert,
   fromTextStream,
@@ -67,7 +67,7 @@ const initialContext = {
   player: 'x' as Player,
   gameReport: '',
   lastReason: '',
-} satisfies ContextFromAgent<typeof xExpert>;
+} satisfies ContextFromExpert<typeof xExpert>;
 
 function getWinner(board: typeof initialContext.board): Player | null {
   const lines = [
@@ -90,7 +90,7 @@ function getWinner(board: typeof initialContext.board): Player | null {
 
 export const ticTacToeMachine = setup({
   types: {
-    context: {} as ContextFromAgent<typeof xExpert>,
+    context: {} as ContextFromExpert<typeof xExpert>,
     events: {} as
       | EventFromExpert<typeof xExpert>
       | {
